@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Contact — LWG Partners Network</title>
+  <meta name="description" content="Contact LWG Partners Network"/>
+  <link rel="icon" href="images/logo/blue-favicon-64.png"/>
+  <link rel="stylesheet" href="css/styles.css"/>
+  <script defer src="js/app.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="index.html">
+        <img src="images/logo/blue-logo-banner.png" alt="LWG Partners Network"/>
+        <div class="brand-text">
+          <strong>LWG Partners Network</strong>
+          <span class="tagline">Quality • Reliability • Impact</span>
+        </div>
+      </a>
+
+      <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="siteNav">
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="nav" id="siteNav">
+        <a href="index.html">Home</a>
+        <a href="shop.html">Shop</a>
+        <a href="about.html">About</a>
+        <a href="contact.html" aria-current="page">Contact</a>
+        <a href="cart.html" class="cart-link">Cart <span id="cartBadge" class="badge">0</span></a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="card">
+      <h1>Contact Us</h1>
+      <p>We’d love to hear from you.</p>
+      <div class="grid-2">
+        <div>
+          <h3>Message</h3>
+          <form class="form-grid" onsubmit="event.preventDefault(); alert('Thanks! We will get back to you.'); this.reset();">
+            <label>Name<input required/></label>
+            <label>Phone/WhatsApp<input/></label>
+            <label class="span-2">Email<input type="email" required/></label>
+            <label class="span-2">Message<textarea rows="4" required></textarea></label>
+            <div class="span-2">
+              <button class="btn primary">Send</button>
+            </div>
+          </form>
+        </div>
+        <div>
+          <h3>Direct</h3>
+          <p><strong>WhatsApp:</strong> <a href="https://wa.me/23272146015" target="_blank" rel="noopener">+232 72 146 015</a></p>
+          <p><strong>Email:</strong> <a href="mailto:info@lwgpartnersnetwork.com">info@lwgpartnersnetwork.com</a></p>
+          <p><strong>Website:</strong> <a href="https://lwgpartnersnetwork.com" target="_blank" rel="noopener">lwgpartnersnetwork.com</a></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap foot">
+      <p>© <span id="year"></span> LWG Partners Network — Creating Impact Globally</p>
+      <div class="socials">
+        <a href="https://wa.me/23272146015" target="_blank" rel="noopener">WhatsApp</a>
+        <a href="mailto:info@lwgpartnersnetwork.com">Email</a>
+        <a href="https://lwgpartnersnetwork.com" target="_blank" rel="noopener">Website</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

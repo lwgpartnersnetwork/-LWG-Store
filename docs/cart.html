@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>LWG Partners Network — Cart</title>
+  <meta name="description" content="Your cart on LWG Partners Network"/>
+  <link rel="icon" href="images/logo/blue-favicon-64.png"/>
+  <link rel="stylesheet" href="css/styles.css"/>
+  <!-- app.js first, then products.js, then SweetAlert (for toasts/prompts) -->
+  <script defer src="js/app.js"></script>
+  <script defer src="js/products.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="index.html">
+        <img src="images/logo/blue-logo-banner.png" alt="LWG Partners Network"/>
+        <div class="brand-text">
+          <strong>LWG Partners Network</strong>
+          <span class="tagline">Quality • Reliability • Impact</span>
+        </div>
+      </a>
+
+      <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="siteNav">
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="nav" id="siteNav">
+        <a href="index.html">Home</a>
+        <a href="shop.html">Shop</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+        <a href="cart.html" class="cart-link" aria-current="page">Cart <span id="cartBadge" class="badge">0</span></a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="card">
+      <h1>Your Cart</h1>
+
+      <div id="cartItems"></div>
+
+      <div class="cart-totals">
+        <div><strong>Subtotal: NLe <span id="cartSubtotal">0</span></strong></div>
+        <div>Delivery: NLe <span id="deliveryFee">0</span></div>
+        <div class="grand"><strong>Total: NLe <span id="cartTotal">0</span></strong></div>
+      </div>
+
+      <div class="form-grid" style="margin:12px 0;">
+        <label>Name
+          <input id="custName" placeholder="e.g., Mohamed K."/>
+        </label>
+        <label>Phone/WhatsApp
+          <input id="custPhone" placeholder="+232 7X XXX XXX"/>
+        </label>
+        <label class="span-2">Delivery Address
+          <input id="custAddress" placeholder="Street / area / city"/>
+        </label>
+
+        <label class="span-2">Delivery Location
+          <select id="deliveryLocation">
+            <option value="">Select location…</option>
+            <option value="Freetown|20">Western — NLe 20</option>
+            <option value="Waterloo|25">Eastern — NLe 25</option>
+            <option value="Makeni|40">Makeni — NLe 40</option>
+            <option value="Bo|45">Bo — NLe 45</option>
+            <option value="Kenema|50">Kenema — NLe 50</option>
+          </select>
+        </label>
+
+        <label class="span-2">Payment Method
+          <select id="paymentMethod">
+            <option value="">Select payment…</option>
+            <option value="orange">Orange Money</option>
+            <option value="africell">Africell Money</option>
+            <option value="bank">Bank Transfer</option>
+            <option value="cod">Cash on Delivery</option>
+          </select>
+        </label>
+
+        <div id="paymentInfo" class="span-2" style="display:none; padding:10px 12px; border:1px dashed rgba(0,47,95,.25); border-radius:10px; background:#f8fafc; font-size:.95rem;"></div>
+      </div>
+
+      <div class="cta">
+        <a href="shop.html" class="btn ghost">Continue Shopping</a>
+        <button id="checkoutBtn" class="btn primary">Checkout via WhatsApp</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap foot">
+      <p>© <span id="year"></span> LWG Partners Network — Creating Impact Globally</p>
+      <div class="socials">
+        <a href="https://wa.me/23272146015" target="_blank" rel="noopener">WhatsApp</a>
+        <a href="mailto:info@lwgpartnersnetwork.com">Email</a>
+        <a href="https://lwgpartnersnetwork.com" target="_blank" rel="noopener">Website</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

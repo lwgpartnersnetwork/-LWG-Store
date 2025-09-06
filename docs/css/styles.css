@@ -1,0 +1,304 @@
+/* =========================================================
+   LWG Partners Network — Global Styles
+   - Sticky footer (flex layout)
+   - Responsive header/nav (mobile drawer)
+   - Product grid, cards, forms, cart, admin
+   ========================================================= */
+
+/* -------------------------
+   0) Root + Reset
+-------------------------- */
+:root{
+  --brand:#0b2a52;
+  --brand-700:#082a57;
+  --brand-50:#f2f7ff;
+  --ink:#111827;
+  --muted:#6b7280;
+  --border:rgba(0,0,0,.08);
+  --bg:#ffffff;
+  --card:#ffffff;
+  --radius:12px;
+  --shadow:0 6px 22px rgba(0,0,0,.08);
+  --header-h: 64px;     /* will shrink on mobile */
+}
+
+/* A tiny modern reset */
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+html{ -webkit-text-size-adjust:100%; }
+body{
+  margin:0;
+  font: 16px/1.55 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  color:var(--ink);
+  background:#fff;
+
+  /* STICKY FOOTER LAYOUT */
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+img{ max-width:100%; display:block; }
+a{ color:var(--brand); text-decoration:none; }
+a:hover{ opacity:.85; }
+button, input, select, textarea{ font: inherit; }
+
+/* main grows to push footer down */
+main{ flex:1 0 auto; }
+
+/* containers */
+.wrap{
+  max-width:1100px;
+  margin:0 auto;
+  padding:0 16px;
+}
+
+/* -------------------------
+   1) Header & Nav
+-------------------------- */
+.site-header{
+  position: sticky;
+  top:0;
+  z-index:100;
+  background:var(--bg);
+  border-bottom:1px solid var(--border);
+}
+
+.header-inner{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:12px 16px;
+  min-width:0;
+}
+
+.brand{
+  display:flex; align-items:center; gap:10px;
+  text-decoration:none; color:inherit; min-width:0;
+}
+.brand img{ width:56px; height:auto; flex:0 0 auto; }
+.brand-text{ display:flex; flex-direction:column; min-width:0; }
+.brand-text strong{
+  color:var(--brand);
+  line-height:1.05;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  max-width:62vw;
+}
+.brand-text .tagline{ color:var(--muted); font-size:.9rem; }
+
+/* desktop nav */
+.nav{ display:flex; align-items:center; gap:22px; }
+.nav a{ font-weight:600; color:var(--brand); }
+.cart-link{ position:relative; }
+.badge{
+  background:var(--brand-700); color:#fff;
+  border-radius:999px; padding:2px 8px; font-size:.78rem; margin-left:6px;
+}
+
+/* hamburger (hidden desktop) */
+.nav-toggle{
+  display:none; background:transparent; border:0; cursor:pointer;
+  padding:6px; margin-left:auto;
+}
+.nav-toggle span{
+  display:block; width:24px; height:2px; background:var(--brand);
+  margin:5px 0; border-radius:2px;
+}
+
+/* -------------------------
+   2) Cards, buttons, grids
+-------------------------- */
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:18px;
+  margin:20px 0;
+}
+.hero.card{ padding:26px; }
+
+.btn{
+  display:inline-block;
+  border:1px solid var(--brand-700);
+  color:#fff; background:var(--brand-700);
+  padding:10px 14px; border-radius:10px; font-weight:700; cursor:pointer;
+}
+.btn.ghost{
+  background:transparent; color:var(--brand-700);
+}
+.btn.primary{ background:var(--brand-700); color:#fff; }
+.btn.danger{
+  background:#b91c1c; border-color:#b91c1c; color:#fff;
+}
+.btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+.cta{ display:flex; gap:10px; flex-wrap:wrap; }
+
+.grid-3{
+  display:grid; grid-template-columns:repeat(3,1fr);
+  gap:14px;
+}
+.grid-2{
+  display:grid; grid-template-columns:repeat(2,1fr);
+  gap:16px;
+}
+@media (max-width: 800px){
+  .grid-3{ grid-template-columns:1fr 1fr; }
+}
+@media (max-width: 560px){
+  .grid-3,.grid-2{ grid-template-columns:1fr; }
+}
+
+.tile{
+  display:block;
+  background:var(--brand-50);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:16px;
+}
+.tile .tile-body strong{ color:var(--brand); }
+
+/* small text utils */
+.small{ font-size:.9rem; }
+.muted{ color:var(--muted); }
+
+/* -------------------------
+   3) Forms
+-------------------------- */
+.form-grid{
+  display:grid; grid-template-columns:1fr 1fr; gap:12px;
+}
+.form-grid .span-2{ grid-column:1 / -1; }
+label{ display:flex; flex-direction:column; gap:6px; font-weight:600; color:var(--brand); }
+input,select,textarea{
+  border:1px solid var(--border); border-radius:10px;
+  padding:10px 12px; background:#fff;
+}
+input:focus,select:focus,textarea:focus{ outline:2px solid #cfe3ff; border-color:#cfe3ff; }
+
+/* -------------------------
+   4) Shop grid
+-------------------------- */
+.grid-products{
+  display:grid; gap:14px;
+  grid-template-columns: repeat(4, 1fr);
+}
+@media (max-width: 1024px){ .grid-products{ grid-template-columns: repeat(3,1fr); } }
+@media (max-width: 760px){ .grid-products{ grid-template-columns: repeat(2,1fr); } }
+@media (max-width: 460px){ .grid-products{ grid-template-columns: 1fr; } }
+
+.product{
+  border:1px solid var(--border); border-radius:12px; overflow:hidden;
+  background:#fff; display:flex; flex-direction:column;
+}
+.product .pimg{ background:#f6f8fb; aspect-ratio: 4 / 3; display:flex; align-items:center; justify-content:center; }
+.product .pimg img{ width:100%; height:100%; object-fit:cover; }
+.product .body{
+  padding:12px; display:flex; gap:8px; flex-direction:column;
+}
+.product .price{ color:var(--brand-700); font-weight:800; }
+
+/* filters bar */
+.shop-header{
+  display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;
+}
+.filters{ display:flex; gap:8px; align-items:center; }
+.filters input[type="search"]{
+  max-width:240px;
+}
+
+/* -------------------------
+   5) Cart
+-------------------------- */
+.cart-item{
+  display:flex; align-items:center; gap:12px;
+  padding:10px 0; border-bottom:1px solid var(--border);
+}
+.cart-item img{
+  width:64px; height:64px; object-fit:cover; border-radius:8px;
+  flex:0 0 64px; min-width:64px;
+}
+.cart-item .info{ flex:1 1 auto; min-width:0; }
+.cart-item .qty{ display:flex; align-items:center; gap:8px; }
+.cart-item .qty button{
+  width:32px; height:32px; line-height:30px; border-radius:8px;
+  border:1px solid var(--border); background:#fff; cursor:pointer;
+}
+.cart-item .btn{ border-radius:8px; }
+
+.cart-totals{
+  border-top:1px solid var(--border);
+  padding-top:10px; margin-top:12px;
+}
+.cart-totals .grand{ font-size:1.1rem; }
+
+/* ensure buttons get clicks on mobile */
+.cart-item button{ position:relative; z-index:1; }
+
+/* -------------------------
+   6) Admin list
+-------------------------- */
+.admin-bar{
+  display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+}
+.admin-actions{ display:flex; gap:8px; align-items:center; }
+.admin-list{ display:grid; gap:12px; }
+.admin-item{
+  border:1px solid var(--border); border-radius:12px; padding:12px; background:#fff;
+}
+.admin-item .row{ display:flex; justify-content:space-between; gap:10px; }
+.admin-item img{ width:100%; max-height:220px; object-fit:cover; border-radius:10px; margin:10px 0; }
+.admin-item .actions{ display:flex; justify-content:flex-end; }
+
+/* -------------------------
+   7) Footer (sticky at bottom)
+-------------------------- */
+.site-footer{
+  border-top:1px solid var(--border);
+  background:var(--bg);
+  margin-top:24px;
+}
+.site-footer .foot{
+  display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+  padding:16px;
+}
+.site-footer p{ margin:0; color:var(--muted); }
+.socials{ display:flex; gap:12px; }
+.socials a{ color:var(--brand); font-weight:600; }
+
+/* -------------------------
+   8) Mobile tweaks / Nav drawer
+-------------------------- */
+@media (max-width: 760px){
+  :root{ --header-h: 60px; }
+
+  .header-inner{ padding:10px 12px; gap:12px; }
+  .brand img{ width:44px; }
+  .brand-text .tagline{ display:none; }
+
+  .brand-text strong{ font-size:1rem; max-width:62vw; }
+
+  .nav-toggle{ display:block; }
+
+  /* Drawer under sticky header */
+  .nav{
+    position:fixed; left:0; right:0; top:var(--header-h);
+    background:#fff; border-top:1px solid var(--border); box-shadow:0 8px 24px rgba(0,0,0,.08);
+    display:block; transform:translateY(-120%); transition:transform .22s ease; z-index:99;
+  }
+  .nav.open{ transform:translateY(0); }
+  .nav a{ display:block; padding:14px 18px; border-bottom:1px solid var(--border); }
+}
+
+/* Extra-small phones */
+@media (max-width: 420px){
+  .header-inner{ gap:8px; padding:8px 10px; }
+  .brand img{ width:40px; }
+  .brand-text strong{ font-size:.95rem; max-width:60vw; }
+}
+
+/* Very narrow devices */
+@media (max-width: 340px){
+  .brand-text strong{ font-size:.9rem; max-width:58vw; }
+}
