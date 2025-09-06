@@ -1,19 +1,57 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <!-- Required meta -->
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>LWG Partners Network — Home</title>
-  <meta name="description" content="LWG Partners Network — Quality • Reliability • Impact"/>
 
-  <!-- Favicon -->
-  <link rel="icon" href="images/logo/blue-favicon-64.png"/>
+  <title>LWG Partners Network — Home</title>
+  <meta name="description" content="LWG Partners Network — Quality • Reliability • Impact. Shop quality products with reliable delivery and community-focused service."/>
+  <meta name="theme-color" content="#002F5F"/>
+
+  <!-- Canonical & basic SEO -->
+  <link rel="canonical" href="https://lwgpartnersnetwork.github.io/-LWG-Store/docs/index.html"/>
+
+  <!-- Social / Open Graph -->
+  <meta property="og:type" content="website"/>
+  <meta property="og:title" content="LWG Partners Network — Home"/>
+  <meta property="og:description" content="From Sierra Leone to the World. Quality • Reliability • Impact."/>
+  <meta property="og:image" content="images/logo/blue-logo-512.png"/>
+  <meta property="og:url" content="https://lwgpartnersnetwork.github.io/-LWG-Store/docs/index.html"/>
+  <meta name="twitter:card" content="summary_large_image"/>
+
+  <!-- Icons -->
+  <link rel="icon" href="images/logo/blue-logo-512.png"/>
+  <link rel="apple-touch-icon" href="images/logo/blue-logo-512.png"/>
+
+  <!-- Performance hints (optional but nice) -->
+  <link rel="preconnect" href="https://lwg-api-ackk.onrender.com" crossorigin>
+  <link rel="prefetch" href="shop.html" as="document"/>
 
   <!-- Styles -->
   <link rel="stylesheet" href="css/styles.css"/>
+
+  <!-- Core helpers (cart store, badge, mobile nav) -->
   <script defer src="js/app.js"></script>
+
+  <!-- Structured data (Organization) -->
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"Organization",
+    "name":"LWG Partners Network",
+    "url":"https://lwgpartnersnetwork.com",
+    "logo":"https://lwgpartnersnetwork.github.io/-LWG-Store/docs/images/lwg-logo-blue.png",
+    "sameAs":[
+      "https://wa.me/23272146015"
+    ]
+  }
+  </script>
 </head>
 <body>
+  <!-- Skip link for accessibility -->
+  <a href="#main" class="visually-hidden-focusable" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;">Skip to content</a>
+
   <!-- Header -->
   <header class="site-header">
     <div class="wrap header-inner">
@@ -25,12 +63,11 @@
         </div>
       </a>
 
-      <!-- Mobile Nav Toggle -->
-      <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="siteNav">
+      <!-- Mobile hamburger (JS looks for .nav-toggle + #siteNav) -->
+      <button class="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="siteNav">
         <span></span><span></span><span></span>
       </button>
 
-      <!-- Navigation -->
       <nav class="nav" id="siteNav">
         <a href="index.html" aria-current="page">Home</a>
         <a href="shop.html">Shop</a>
@@ -41,54 +78,76 @@
     </div>
   </header>
 
-  <!-- Main Content -->
-  <main class="wrap">
-    <!-- Hero Section -->
-    <section class="hero card">
-      <h1>From Sierra Leone to the World 🌍</h1>
-      <p>Shop quality products with reliable delivery — explore Clothing, Logistics, E-Commerce, and Foundation.</p>
-      <div class="cta">
-        <a class="btn primary" href="shop.html">Start Shopping</a>
-        <a class="btn ghost" href="about.html">Learn More</a>
+  <!-- Main -->
+  <main id="main" class="wrap">
+
+    <!-- Hero -->
+    <section class="hero card" aria-labelledby="heroTitle">
+      <div class="hero-text">
+        <h1 id="heroTitle">From Sierra Leone to the World 🌍</h1>
+        <p>Shop quality products with reliable delivery, and explore our branches in Clothing, Logistics, E-Commerce and Foundation.</p>
+        <div class="cta">
+          <a class="btn primary" href="shop.html">Start Shopping</a>
+          <a class="btn ghost" href="about.html">Learn More</a>
+        </div>
+      </div>
+      <img
+        class="hero-logo"
+        src="images/logo/yellow-logo-512.png"
+        alt="LWG Partners Network yellow logo"
+        loading="lazy"
+        width="640" height="360"
+        style="max-width:100%;height:auto"
+      />
+    </section>
+
+    <!-- Features -->
+    <section class="features grid-3" aria-label="Key benefits">
+      <div class="card">
+        <h3>Quality</h3>
+        <p>Curated products from trusted suppliers. We stand behind what we sell.</p>
+      </div>
+      <div class="card">
+        <h3>Reliability</h3>
+        <p>On-time deliveries and clear communication throughout your order journey.</p>
+      </div>
+      <div class="card">
+        <h3>Impact</h3>
+        <p>We reinvest in people and communities through the LWG Foundation.</p>
       </div>
     </section>
 
-    <!-- Categories -->
-    <section class="card">
-      <h2>Featured Categories</h2>
-      <div class="grid-3">
-        <a class="tile" href="shop.html">
-          <div class="tile-body">
-            <strong>Clothing</strong>
-            <span>Men • Women • Kids</span>
-          </div>
-        </a>
-        <a class="tile" href="shop.html">
-          <div class="tile-body">
-            <strong>Electronics</strong>
-            <span>Headphones • Accessories</span>
-          </div>
-        </a>
-        <a class="tile" href="shop.html">
-          <div class="tile-body">
-            <strong>Essentials</strong>
-            <span>Daily must-haves</span>
-          </div>
-        </a>
-      </div>
+    <!-- Branches -->
+    <section class="card highlight" aria-labelledby="branchesTitle">
+      <h2 id="branchesTitle">Branches</h2>
+      <ul class="chips" role="list">
+        <li>Clothing Store</li>
+        <li>Logistics</li>
+        <li>E-Commerce</li>
+        <li>Foundation</li>
+      </ul>
     </section>
+
   </main>
 
   <!-- Footer -->
   <footer class="site-footer">
     <div class="wrap foot">
       <p>© <span id="year"></span> LWG Partners Network — Creating Impact Globally</p>
-      <div class="socials">
+      <div class="socials" aria-label="Social links">
         <a href="https://wa.me/23272146015" target="_blank" rel="noopener">WhatsApp</a>
         <a href="mailto:info@lwgpartnersnetwork.com">Email</a>
         <a href="https://lwgpartnersnetwork.com" target="_blank" rel="noopener">Website</a>
       </div>
     </div>
   </footer>
+
+  <!-- Minimal helper style for the skip link (kept inline to avoid extra file) -->
+  <style>
+    .visually-hidden-focusable:active, .visually-hidden-focusable:focus {
+      position: static !important; width:auto;height:auto;clip:auto;padding:8px 12px;
+      background:#002F5F;color:#fff;border-radius:6px;z-index:9999;
+    }
+  </style>
 </body>
 </html>

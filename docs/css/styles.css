@@ -1,304 +1,238 @@
-/* =========================================================
-   LWG Partners Network — Global Styles
-   - Sticky footer (flex layout)
-   - Responsive header/nav (mobile drawer)
-   - Product grid, cards, forms, cart, admin
-   ========================================================= */
-
-/* -------------------------
-   0) Root + Reset
--------------------------- */
 :root{
-  --brand:#0b2a52;
-  --brand-700:#082a57;
-  --brand-50:#f2f7ff;
-  --ink:#111827;
+  --navy:#002F5F;
+  --yellow:#FFC107;
+  --ink:#0B1220;
   --muted:#6b7280;
-  --border:rgba(0,0,0,.08);
-  --bg:#ffffff;
-  --card:#ffffff;
-  --radius:12px;
-  --shadow:0 6px 22px rgba(0,0,0,.08);
-  --header-h: 64px;     /* will shrink on mobile */
+  --bg:#F7F8FB;
+  --card:#FFFFFF;
+  --line:#e5e7eb;
+  --ok:#10b981;
+  --danger:#ef4444;
+
+  /* header height used for mobile drawer offset */
+  --header-h: 64px;
 }
 
-/* A tiny modern reset */
-*{ box-sizing:border-box; }
-html,body{ height:100%; }
-html{ -webkit-text-size-adjust:100%; }
+/* ==== Base ==== */
+*{ box-sizing:border-box }
+html, body{ height:100% }
 body{
   margin:0;
-  font: 16px/1.55 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  min-height:100vh;                 /* fill viewport */
+  display:flex; flex-direction:column; /* enable sticky footer */
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif;
   color:var(--ink);
-  background:#fff;
-
-  /* STICKY FOOTER LAYOUT */
-  min-height:100vh;
-  display:flex;
-  flex-direction:column;
+  background:var(--bg);
 }
-img{ max-width:100%; display:block; }
-a{ color:var(--brand); text-decoration:none; }
-a:hover{ opacity:.85; }
-button, input, select, textarea{ font: inherit; }
-
-/* main grows to push footer down */
+/* main should expand to push footer down */
 main{ flex:1 0 auto; }
 
-/* containers */
-.wrap{
-  max-width:1100px;
-  margin:0 auto;
-  padding:0 16px;
-}
-
-/* -------------------------
-   1) Header & Nav
--------------------------- */
-.site-header{
-  position: sticky;
-  top:0;
-  z-index:100;
-  background:var(--bg);
-  border-bottom:1px solid var(--border);
-}
-
-.header-inner{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:16px;
-  padding:12px 16px;
-  min-width:0;
-}
-
-.brand{
-  display:flex; align-items:center; gap:10px;
-  text-decoration:none; color:inherit; min-width:0;
-}
-.brand img{ width:56px; height:auto; flex:0 0 auto; }
-.brand-text{ display:flex; flex-direction:column; min-width:0; }
-.brand-text strong{
-  color:var(--brand);
-  line-height:1.05;
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-  max-width:62vw;
-}
-.brand-text .tagline{ color:var(--muted); font-size:.9rem; }
-
-/* desktop nav */
-.nav{ display:flex; align-items:center; gap:22px; }
-.nav a{ font-weight:600; color:var(--brand); }
-.cart-link{ position:relative; }
-.badge{
-  background:var(--brand-700); color:#fff;
-  border-radius:999px; padding:2px 8px; font-size:.78rem; margin-left:6px;
-}
-
-/* hamburger (hidden desktop) */
-.nav-toggle{
-  display:none; background:transparent; border:0; cursor:pointer;
-  padding:6px; margin-left:auto;
-}
-.nav-toggle span{
-  display:block; width:24px; height:2px; background:var(--brand);
-  margin:5px 0; border-radius:2px;
-}
-
-/* -------------------------
-   2) Cards, buttons, grids
--------------------------- */
+.wrap{ max-width:1100px; margin:0 auto; padding:20px }
+img{ max-width:100%; display:block }
 .card{
   background:var(--card);
-  border:1px solid var(--border);
-  border-radius:var(--radius);
-  box-shadow:var(--shadow);
-  padding:18px;
-  margin:20px 0;
-}
-.hero.card{ padding:26px; }
-
-.btn{
-  display:inline-block;
-  border:1px solid var(--brand-700);
-  color:#fff; background:var(--brand-700);
-  padding:10px 14px; border-radius:10px; font-weight:700; cursor:pointer;
-}
-.btn.ghost{
-  background:transparent; color:var(--brand-700);
-}
-.btn.primary{ background:var(--brand-700); color:#fff; }
-.btn.danger{
-  background:#b91c1c; border-color:#b91c1c; color:#fff;
-}
-.btn:disabled{ opacity:.5; cursor:not-allowed; }
-
-.cta{ display:flex; gap:10px; flex-wrap:wrap; }
-
-.grid-3{
-  display:grid; grid-template-columns:repeat(3,1fr);
-  gap:14px;
-}
-.grid-2{
-  display:grid; grid-template-columns:repeat(2,1fr);
-  gap:16px;
-}
-@media (max-width: 800px){
-  .grid-3{ grid-template-columns:1fr 1fr; }
-}
-@media (max-width: 560px){
-  .grid-3,.grid-2{ grid-template-columns:1fr; }
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:20px;
+  box-shadow:0 8px 24px rgba(0,0,0,.06)
 }
 
-.tile{
-  display:block;
-  background:var(--brand-50);
-  border:1px solid var(--border);
-  border-radius:12px;
-  padding:16px;
+/* ==== Header / Nav (responsive, overflow-safe) ==== */
+.site-header{
+  position:sticky; top:0;
+  background:#fff;
+  border-bottom:1px solid var(--line);
+  z-index:100;
 }
-.tile .tile-body strong{ color:var(--brand); }
+.header-inner{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:16px; padding:14px 0;
+}
+.brand{
+  display:flex; align-items:center; gap:10px;
+  text-decoration:none; color:inherit;
+  min-width:0; /* allow shrink on small screens */
+}
+.brand img{ width:56px; height:auto; border-radius:8px }
+.brand-text{ display:flex; flex-direction:column; min-width:0 }
+.brand-text strong{
+  color:var(--navy);
+  font-size:1.2rem; line-height:1;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  max-width:62vw; /* keep space for menu + cart */
+}
+.brand-text .tagline{ display:block; color:#6b7280; font-size:.9rem }
 
-/* small text utils */
-.small{ font-size:.9rem; }
-.muted{ color:var(--muted); }
-
-/* -------------------------
-   3) Forms
--------------------------- */
-.form-grid{
-  display:grid; grid-template-columns:1fr 1fr; gap:12px;
-}
-.form-grid .span-2{ grid-column:1 / -1; }
-label{ display:flex; flex-direction:column; gap:6px; font-weight:600; color:var(--brand); }
-input,select,textarea{
-  border:1px solid var(--border); border-radius:10px;
-  padding:10px 12px; background:#fff;
-}
-input:focus,select:focus,textarea:focus{ outline:2px solid #cfe3ff; border-color:#cfe3ff; }
-
-/* -------------------------
-   4) Shop grid
--------------------------- */
-.grid-products{
-  display:grid; gap:14px;
-  grid-template-columns: repeat(4, 1fr);
-}
-@media (max-width: 1024px){ .grid-products{ grid-template-columns: repeat(3,1fr); } }
-@media (max-width: 760px){ .grid-products{ grid-template-columns: repeat(2,1fr); } }
-@media (max-width: 460px){ .grid-products{ grid-template-columns: 1fr; } }
-
-.product{
-  border:1px solid var(--border); border-radius:12px; overflow:hidden;
-  background:#fff; display:flex; flex-direction:column;
-}
-.product .pimg{ background:#f6f8fb; aspect-ratio: 4 / 3; display:flex; align-items:center; justify-content:center; }
-.product .pimg img{ width:100%; height:100%; object-fit:cover; }
-.product .body{
-  padding:12px; display:flex; gap:8px; flex-direction:column;
-}
-.product .price{ color:var(--brand-700); font-weight:800; }
-
-/* filters bar */
-.shop-header{
-  display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;
-}
-.filters{ display:flex; gap:8px; align-items:center; }
-.filters input[type="search"]{
-  max-width:240px;
+/* Desktop nav */
+.nav{ display:flex; align-items:center; gap:22px }
+.nav a{ font-weight:600; text-decoration:none; color:#0b2a52 }
+.nav a:hover{ opacity:.8 }
+.cart-link{ position:relative }
+.badge{
+  background:#082a57; color:#fff;
+  border-radius:999px; padding:2px 8px; font-size:.8rem; margin-left:6px
 }
 
-/* -------------------------
-   5) Cart
--------------------------- */
-.cart-item{
-  display:flex; align-items:center; gap:12px;
-  padding:10px 0; border-bottom:1px solid var(--border);
+/* Hamburger */
+.nav-toggle{
+  display:none;
+  background:transparent; border:0; cursor:pointer;
+  padding:6px; margin-left:auto;
+  position:relative; z-index:1002; /* above drawer */
 }
-.cart-item img{
-  width:64px; height:64px; object-fit:cover; border-radius:8px;
-  flex:0 0 64px; min-width:64px;
+.nav-toggle span{
+  display:block; width:24px; height:2px;
+  background:#0b2a52; margin:5px 0; border-radius:2px;
 }
-.cart-item .info{ flex:1 1 auto; min-width:0; }
-.cart-item .qty{ display:flex; align-items:center; gap:8px; }
-.cart-item .qty button{
-  width:32px; height:32px; line-height:30px; border-radius:8px;
-  border:1px solid var(--border); background:#fff; cursor:pointer;
-}
-.cart-item .btn{ border-radius:8px; }
 
-.cart-totals{
-  border-top:1px solid var(--border);
-  padding-top:10px; margin-top:12px;
+/* Optional backdrop if you add it in HTML */
+.nav-backdrop{
+  position:fixed; inset:0;
+  background:rgba(0,0,0,.25);
+  z-index:1000;
 }
-.cart-totals .grand{ font-size:1.1rem; }
 
-/* ensure buttons get clicks on mobile */
-.cart-item button{ position:relative; z-index:1; }
-
-/* -------------------------
-   6) Admin list
--------------------------- */
-.admin-bar{
-  display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
-}
-.admin-actions{ display:flex; gap:8px; align-items:center; }
-.admin-list{ display:grid; gap:12px; }
-.admin-item{
-  border:1px solid var(--border); border-radius:12px; padding:12px; background:#fff;
-}
-.admin-item .row{ display:flex; justify-content:space-between; gap:10px; }
-.admin-item img{ width:100%; max-height:220px; object-fit:cover; border-radius:10px; margin:10px 0; }
-.admin-item .actions{ display:flex; justify-content:flex-end; }
-
-/* -------------------------
-   7) Footer (sticky at bottom)
--------------------------- */
-.site-footer{
-  border-top:1px solid var(--border);
-  background:var(--bg);
-  margin-top:24px;
-}
-.site-footer .foot{
-  display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
-  padding:16px;
-}
-.site-footer p{ margin:0; color:var(--muted); }
-.socials{ display:flex; gap:12px; }
-.socials a{ color:var(--brand); font-weight:600; }
-
-/* -------------------------
-   8) Mobile tweaks / Nav drawer
--------------------------- */
-@media (max-width: 760px){
+/* Mobile drawer */
+@media (max-width:760px){
   :root{ --header-h: 60px; }
 
-  .header-inner{ padding:10px 12px; gap:12px; }
-  .brand img{ width:44px; }
-  .brand-text .tagline{ display:none; }
+  .brand img{ width:44px }
+  .brand-text .tagline{ display:none }
+  .brand-text strong{ font-size:1rem }
 
-  .brand-text strong{ font-size:1rem; max-width:62vw; }
+  .header-inner{ padding:10px 0 }
+  .nav-toggle{ display:block }
 
-  .nav-toggle{ display:block; }
-
-  /* Drawer under sticky header */
   .nav{
     position:fixed; left:0; right:0; top:var(--header-h);
-    background:#fff; border-top:1px solid var(--border); box-shadow:0 8px 24px rgba(0,0,0,.08);
-    display:block; transform:translateY(-120%); transition:transform .22s ease; z-index:99;
+    background:#fff;
+    border-top:1px solid rgba(0,0,0,.06);
+    box-shadow:0 8px 24px rgba(0,0,0,.08);
+    display:block;
+    transform:translateY(-120%);
+    transition:transform .22s ease;
+    z-index:1001;
+    pointer-events:none;      /* don’t block taps while hidden */
   }
-  .nav.open{ transform:translateY(0); }
-  .nav a{ display:block; padding:14px 18px; border-bottom:1px solid var(--border); }
+  .nav.open{
+    transform:translateY(0);
+    pointer-events:auto;
+  }
+  .nav a{
+    display:block; padding:14px 18px;
+    border-bottom:1px solid rgba(0,0,0,.05);
+  }
 }
 
 /* Extra-small phones */
-@media (max-width: 420px){
-  .header-inner{ gap:8px; padding:8px 10px; }
-  .brand img{ width:40px; }
-  .brand-text strong{ font-size:.95rem; max-width:60vw; }
+@media (max-width:420px){
+  .header-inner{ gap:8px; padding:8px 0 }
+  .brand img{ width:40px }
+  .brand-text strong{
+    font-size:.95rem; line-height:1.05; max-width:62vw;
+  }
 }
 
-/* Very narrow devices */
-@media (max-width: 340px){
-  .brand-text strong{ font-size:.9rem; max-width:58vw; }
+/* Very narrow screens */
+@media (max-width:340px){
+  .brand-text strong{ font-size:.9rem; max-width:58vw }
+}
+
+/* ==== Footer (sticky at bottom) ==== */
+.site-footer{
+  border-top:1px solid var(--line);
+  background:#fff;
+  margin-top:30px;
+}
+.foot{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:10px; flex-wrap:wrap
+}
+.socials a{ color:var(--navy); text-decoration:none; margin-right:10px }
+
+/* ==== Hero / buttons ==== */
+.hero{ display:grid; grid-template-columns:1.2fr .8fr; gap:16px; align-items:center }
+.hero-text h1{ margin:0 0 8px; font-size:2rem; color:var(--navy) }
+.cta{ display:flex; gap:10px; flex-wrap:wrap; margin-top:8px }
+.btn{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:12px 16px; border-radius:12px;
+  border:1px solid var(--line); text-decoration:none;
+  font-weight:700; color:var(--navy); background:#fff
+}
+.btn.primary{ background:var(--navy); color:#fff; border-color:var(--navy) }
+.btn.ghost{ background:#f7fafc }
+
+/* ==== Grids / lists ==== */
+.grid-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:16px }
+.grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:12px }
+.highlight{ margin-top:16px }
+.chips{ display:flex; gap:8px; flex-wrap:wrap; padding:0; margin:0; list-style:none }
+.chips li{ background:#f2f6fb; border:1px solid var(--line); padding:8px 10px; border-radius:999px }
+
+/* Shop */
+.shop-header{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:12px; flex-wrap:wrap
+}
+.filters input, .filters select{
+  padding:10px; border-radius:10px; border:1px solid var(--line)
+}
+.grid-products{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:16px }
+.product{
+  border:1px solid var(--line); border-radius:14px;
+  overflow:hidden; background:#fff; display:flex; flex-direction:column
+}
+.product .pimg{
+  aspect-ratio:1/1; background:#f6f7fb; display:grid; place-items:center;
+  color:#94a3b8; font-weight:700
+}
+.product .body{ padding:12px; display:flex; flex-direction:column; gap:6px }
+.price{ font-weight:800; color:#111 }
+.small{ font-size:.85rem }
+.muted{ color:var(--muted) }
+
+/* Forms */
+.form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px }
+.form-grid .span-2{ grid-column:1/-1 }
+.form-grid input, .form-grid textarea, .form-grid select{
+  padding:10px; border:1px solid var(--line); border-radius:10px; width:100%
+}
+.form-grid .actions{ display:flex; gap:10px; flex-wrap:wrap }
+.btn.danger{ background:var(--danger); color:#fff; border-color:var(--danger) }
+
+/* Admin list */
+.admin-list{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:12px }
+.admin-item{
+  border:1px solid var(--line); border-radius:12px; padding:10px;
+  display:flex; flex-direction:column; gap:6px
+}
+.admin-item .row{ display:flex; gap:8px; justify-content:space-between; align-items:center }
+.admin-item .actions{ display:flex; gap:8px; justify-content:flex-end }
+
+/* About */
+.about-logo{ max-width:260px; margin:auto }
+
+/* Contact */
+.contact-card{ border:1px dashed var(--line); border-radius:12px; padding:12px; margin-top:12px }
+
+/* Cart */
+.cart-item{
+  display:grid; grid-template-columns:64px 1fr auto auto;
+  gap:10px; align-items:center; border-bottom:1px solid var(--line); padding:10px 0
+}
+.cart-item img{ width:64px; height:64px; object-fit:cover; border-radius:8px; background:#f3f4f6 }
+.qty{ display:flex; align-items:center; gap:6px }
+.qty button{ width:26px; height:26px; border-radius:6px; border:1px solid var(--line); background:#fff }
+
+/* Responsive grids */
+@media (max-width:980px){
+  .grid-products{ grid-template-columns:repeat(3,1fr) }
+  .admin-list{ grid-template-columns:repeat(2,1fr) }
+}
+@media (max-width:680px){
+  .hero{ grid-template-columns:1fr }
+  .grid-3{ grid-template-columns:1fr }
+  .grid-products{ grid-template-columns:repeat(2,1fr) }
+  .grid-2{ grid-template-columns:1fr }
 }

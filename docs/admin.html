@@ -4,26 +4,41 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>LWG Partners Network — Admin</title>
-  <meta name="description" content="Admin dashboard — manage products"/>
-  <link rel="icon" href="images/logo/blue-favicon-64.png"/>
+  <meta name="description" content="LWG Partners Network — Quality • Reliability • Impact"/>
+
+  <!-- Icons & Styles -->
+  <link rel="icon" href="images/lwg-logo-blue.png"/>
   <link rel="stylesheet" href="css/styles.css"/>
+
+  <!-- Core helpers (cart store, badge, mobile nav) -->
   <script defer src="js/app.js"></script>
-  <script defer src="js/products.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- Prevent form resubmission on refresh -->
+  <script>
+    if (window.history && 'replaceState' in history) {
+      window.addEventListener('pageshow', () => history.replaceState(null, '', location.href));
+    }
+  </script>
 </head>
 <body>
+  <!-- Header -->
   <header class="site-header">
     <div class="wrap header-inner">
       <a class="brand" href="index.html">
-        <img src="images/logo/blue-logo-banner.png" alt="LWG Partners Network"/>
+        <img src="images/lwg-logo-blue.png" alt="LWG Partners Network"/>
         <div class="brand-text">
           <strong>LWG Partners Network</strong>
           <span class="tagline">Quality • Reliability • Impact</span>
         </div>
       </a>
 
-      <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="siteNav">☰</button>
+      <!-- Mobile menu button -->
+      <button class="nav-toggle"
+              aria-label="Toggle navigation" aria-expanded="false" aria-controls="siteNav">
+        <span></span><span></span><span></span>
+      </button>
 
+      <!-- Main nav -->
       <nav class="nav" id="siteNav">
         <a href="index.html">Home</a>
         <a href="shop.html">Shop</a>
@@ -34,39 +49,72 @@
     </div>
   </header>
 
-  <main class="wrap">
-    <section class="card">
-      <div class="admin-bar">
-        <h1>Admin — Products</h1>
-        <div class="admin-actions">
-          <span id="adminStatus" class="muted small">Status: checking…</span>
-          <button id="adminLoginBtn" class="btn">Admin Login</button>
-          <button id="adminLogoutBtn" class="btn danger" style="display:none;">Logout</button>
-          <button id="adminRefreshBtn" class="btn ghost">Refresh</button>
+  <!-- Main -->
+  <main class="wrap" id="main">
+    <section class="card" aria-labelledby="adminTitle">
+      <div class="admin-bar" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <h1 id="adminTitle">Admin — Products</h1>
+        <div class="admin-actions" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span id="adminStatus" class="muted small" role="status" aria-live="polite">Status: checking…</span>
+          <button id="adminLoginBtn" class="btn" type="button">Admin Login</button>
+          <button id="adminLogoutBtn" class="btn danger" type="button" style="display:none;">Logout</button>
+          <button id="adminRefreshBtn" class="btn ghost" type="button" title="Re-fetch products from the server">Refresh</button>
         </div>
       </div>
-      <p class="muted">Add or manage products. Data saves to your <strong>server</strong> when logged in. (Falls back to local demo only if the API is unreachable.)</p>
 
-      <form id="productForm" class="form-grid">
-        <label>Title<input name="title" required/></label>
-        <label>Category<input name="category" placeholder="e.g., Men, Women, Kids, Electronics"/></label>
-        <label>Price (NLe)<input name="price" type="number" min="0" step="0.01" required/></label>
-        <label>Stock<input name="stock" type="number" min="0" required value="10"/></label>
-        <label>Image URL<input name="image" placeholder="https://..."/></label>
-        <label class="span-2">Description<textarea name="description" rows="3" placeholder="Short description"></textarea></label>
+      <p class="muted">
+        Add or manage products. When logged in, data saves to your <strong>server</strong>.
+        If the API is unreachable, it falls back to local demo storage (dev only).
+      </p>
+
+      <form id="productForm" class="form-grid" autocomplete="off" aria-describedby="formHelp">
+        <label>Title
+          <input name="title" required aria-required="true"/>
+        </label>
+
+        <label>Category
+          <input name="category" placeholder="e.g., Men, Women, Kids, Electronics"/>
+        </label>
+
+        <label>Price (NLe)
+          <input name="price" type="number" min="0" step="0.01" required aria-required="true"/>
+        </label>
+
+        <label>Stock
+          <input name="stock" type="number" min="0" required value="10" aria-required="true"/>
+        </label>
+
+        <label>Image URL
+          <input name="image" placeholder="https://…"/>
+        </label>
+
+        <label class="span-2">Description
+          <textarea name="description" rows="3" placeholder="Short description"></textarea>
+        </label>
+
+        <p id="formHelp" class="muted small span-2">
+          Tip: You can paste a direct image link for product photos (e.g., from your CDN or image host).
+        </p>
+
         <div class="span-2 actions">
           <button class="btn primary" type="submit">Save Product</button>
-          <button class="btn danger" type="button" id="clearProducts">Clear Local (Dev)</button>
+          <button class="btn danger" type="button" id="clearProducts" title="Dev only — clears local demo products">
+            Clear Local (Dev)
+          </button>
         </div>
       </form>
     </section>
 
-    <section class="card">
-      <h2>Existing Products</h2>
-      <div id="adminList" class="admin-list"></div>
+    <section class="card" aria-labelledby="listTitle">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <h2 id="listTitle">Existing Products</h2>
+        <div class="muted small">Click <em>Delete</em> to remove an item.</div>
+      </div>
+      <div id="adminList" class="admin-list" aria-live="polite"></div>
     </section>
   </main>
 
+  <!-- Footer -->
   <footer class="site-footer">
     <div class="wrap foot">
       <p>© <span id="year"></span> LWG Partners Network — Creating Impact Globally</p>
@@ -78,27 +126,42 @@
     </div>
   </footer>
 
+  <!-- SweetAlert for nicer prompts -->
+  <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- Page logic: API calls, admin actions, rendering -->
+  <script defer src="js/products.js"></script>
+
+  <!-- Admin wiring -->
   <script>
-    // Hook up admin login/logout/refresh using helpers exposed by products.js
     document.addEventListener('DOMContentLoaded', () => {
-      const statusEl = document.getElementById('adminStatus');
-      const loginBtn = document.getElementById('adminLoginBtn');
-      const logoutBtn = document.getElementById('adminLogoutBtn');
+      const statusEl   = document.getElementById('adminStatus');
+      const loginBtn   = document.getElementById('adminLoginBtn');
+      const logoutBtn  = document.getElementById('adminLogoutBtn');
       const refreshBtn = document.getElementById('adminRefreshBtn');
+
+      // keep ARIA-expanded in sync for the hamburger
+      const navBtn = document.querySelector('.nav-toggle');
+      const navEl  = document.getElementById('siteNav');
+      if (navBtn && navEl) {
+        navBtn.addEventListener('click', () => {
+          const open = navEl.classList.toggle('open');
+          navBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+      }
 
       function refreshStatus(){
         const ok = window.LWG_AUTH?.isLoggedIn?.();
         statusEl.textContent = ok ? 'Status: Logged in' : 'Status: Not logged in';
-        loginBtn.style.display = ok ? 'none' : 'inline-block';
+        loginBtn.style.display  = ok ? 'none' : 'inline-block';
         logoutBtn.style.display = ok ? 'inline-block' : 'none';
       }
 
       loginBtn.addEventListener('click', async () => {
         try{
           await window.LWG_AUTH.login();
-          if (window.Swal) Swal.fire({ icon:'success', title:'Logged in', timer:1000, showConfirmButton:false });
+          window.Swal && Swal.fire({ icon:'success', title:'Logged in', timer:1000, showConfirmButton:false });
         }catch(e){
-          if (window.Swal) Swal.fire({ icon:'error', title:'Login cancelled or failed' });
+          window.Swal && Swal.fire({ icon:'error', title:'Login cancelled or failed' });
         }finally{
           refreshStatus();
         }
@@ -106,13 +169,14 @@
 
       logoutBtn.addEventListener('click', () => {
         window.LWG_AUTH.logout();
-        if (window.Swal) Swal.fire({ icon:'success', title:'Logged out', timer:900, showConfirmButton:false });
+        window.Swal && Swal.fire({ icon:'success', title:'Logged out', timer:900, showConfirmButton:false });
         refreshStatus();
       });
 
+      // Re-fetch the products list (products.js listens to this custom event)
       refreshBtn.addEventListener('click', () => {
         window.dispatchEvent(new Event('admin:refresh'));
-        if (window.Swal) Swal.fire({ icon:'info', title:'Refreshing…', timer:700, showConfirmButton:false });
+        window.Swal && Swal.fire({ icon:'info', title:'Refreshing…', timer:700, showConfirmButton:false });
       });
 
       refreshStatus();

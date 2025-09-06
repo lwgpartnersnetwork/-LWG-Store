@@ -1,26 +1,58 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <!-- Required meta -->
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
   <title>Contact — LWG Partners Network</title>
-  <meta name="description" content="Contact LWG Partners Network"/>
-  <link rel="icon" href="images/logo/blue-favicon-64.png"/>
+  <meta name="description" content="Get in touch with LWG Partners Network. WhatsApp, phone, email, and social links. Quality • Reliability • Impact."/>
+
+  <!-- Icons -->
+  <link rel="icon" href="images/logo/blue-logo-512.png"/>
+
+  <!-- Social / Open Graph -->
+  <meta property="og:type" content="website"/>
+  <meta property="og:title" content="Contact — LWG Partners Network"/>
+  <meta property="og:description" content="Reach us via WhatsApp, phone, or email. Quality • Reliability • Impact."/>
+  <meta property="og:image" content="images/logo/blue-logo-512.png"/>
+
+  <!-- Styles + core helpers (cart badge + mobile nav) -->
   <link rel="stylesheet" href="css/styles.css"/>
   <script defer src="js/app.js"></script>
+
+  <!-- Organization + contact structured data -->
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"Organization",
+    "name":"LWG Partners Network",
+    "url":"https://lwgpartnersnetwork.com",
+    "logo":"https://lwgpartnersnetwork.github.io/-LWG-Store/docs/images/lwg-logo-blue.png",
+    "contactPoint":[{
+      "@type":"ContactPoint",
+      "telephone":"+23272146015",
+      "contactType":"customer support",
+      "areaServed":"SL",
+      "availableLanguage":["en"]
+    }]
+  }
+  </script>
 </head>
 <body>
+  <!-- Header -->
   <header class="site-header">
     <div class="wrap header-inner">
       <a class="brand" href="index.html">
-        <img src="images/logo/blue-logo-banner.png" alt="LWG Partners Network"/>
+        <img src="images/logo/blue-logo-banner.png" alt="LWG Partners Network" />
         <div class="brand-text">
           <strong>LWG Partners Network</strong>
           <span class="tagline">Quality • Reliability • Impact</span>
         </div>
       </a>
 
-      <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="siteNav">
+      <!-- Mobile hamburger -->
+      <button class="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="siteNav">
         <span></span><span></span><span></span>
       </button>
 
@@ -34,33 +66,69 @@
     </div>
   </header>
 
+  <!-- Main -->
   <main class="wrap">
     <section class="card">
       <h1>Contact Us</h1>
-      <p>We’d love to hear from you.</p>
       <div class="grid-2">
-        <div>
-          <h3>Message</h3>
-          <form class="form-grid" onsubmit="event.preventDefault(); alert('Thanks! We will get back to you.'); this.reset();">
-            <label>Name<input required/></label>
-            <label>Phone/WhatsApp<input/></label>
-            <label class="span-2">Email<input type="email" required/></label>
-            <label class="span-2">Message<textarea rows="4" required></textarea></label>
-            <div class="span-2">
-              <button class="btn primary">Send</button>
-            </div>
-          </form>
+        <!-- Quick WhatsApp -->
+        <div class="contact-card">
+          <h3>Quick Contact</h3>
+          <p>For a fast response, chat with us on WhatsApp.</p>
+          <a class="btn primary" href="https://wa.me/23272146015" target="_blank" rel="noopener" aria-label="Open WhatsApp chat with LWG Partners Network">
+            Chat on WhatsApp
+          </a>
         </div>
+
+        <!-- Info -->
         <div>
-          <h3>Direct</h3>
-          <p><strong>WhatsApp:</strong> <a href="https://wa.me/23272146015" target="_blank" rel="noopener">+232 72 146 015</a></p>
-          <p><strong>Email:</strong> <a href="mailto:info@lwgpartnersnetwork.com">info@lwgpartnersnetwork.com</a></p>
-          <p><strong>Website:</strong> <a href="https://lwgpartnersnetwork.com" target="_blank" rel="noopener">lwgpartnersnetwork.com</a></p>
+          <div class="contact-card">
+            <h3>Reach Us</h3>
+            <p><strong>Phone/WhatsApp:</strong> <a href="tel:+23272146015">+232 72 146 015</a></p>
+            <p><strong>Email:</strong> <a href="mailto:info@lwgpartnersnetwork.com">info@lwgpartnersnetwork.com</a></p>
+            <p><strong>Website:</strong> <a href="https://lwgpartnersnetwork.com" target="_blank" rel="noopener">lwgpartnersnetwork.com</a></p>
+          </div>
+          <div class="contact-card">
+            <h3>Business Hours</h3>
+            <p>Mon–Sat: 9:00 – 18:00</p>
+            <p>Sun: Closed</p>
+          </div>
         </div>
+      </div>
+    </section>
+
+    <!-- Optional contact form that sends to WhatsApp (no backend needed) -->
+    <section class="card" style="margin-top:20px;">
+      <h2>Send Us a Message</h2>
+      <form id="contactForm" class="form-grid" onsubmit="return sendToWhatsApp(event)">
+        <label>Name
+          <input id="cName" name="name" required placeholder="Your name"/>
+        </label>
+        <label>Phone/WhatsApp
+          <input id="cPhone" name="phone" required placeholder="+232 7X XXX XXX"/>
+        </label>
+        <label class="span-2">Message
+          <textarea id="cMsg" name="message" rows="4" required placeholder="How can we help?"></textarea>
+        </label>
+        <div class="span-2 actions">
+          <button class="btn primary" type="submit">Send via WhatsApp</button>
+          <button class="btn ghost" type="reset">Clear</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card" style="margin-top:20px;">
+      <h2>Follow Us</h2>
+      <div class="grid-2">
+        <a class="btn" href="https://www.facebook.com/profile.php?id=61562704062688" target="_blank" rel="noopener">📘 Facebook</a>
+        <a class="btn" href="https://www.youtube.com/@LWGPartnersnetwork" target="_blank" rel="noopener">▶️ YouTube</a>
+        <a class="btn" href="https://www.tiktok.com/@lwgpartnersnetwork" target="_blank" rel="noopener">🎵 TikTok</a>
+        <a class="btn" href="https://www.instagram.com/lwgpartnersnetwork" target="_blank" rel="noopener">📷 Instagram</a>
       </div>
     </section>
   </main>
 
+  <!-- Footer -->
   <footer class="site-footer">
     <div class="wrap foot">
       <p>© <span id="year"></span> LWG Partners Network — Creating Impact Globally</p>
@@ -71,5 +139,25 @@
       </div>
     </div>
   </footer>
+
+  <!-- Tiny inline script to build a WhatsApp message from the form -->
+  <script>
+    function sendToWhatsApp(e){
+      e.preventDefault();
+      const name = document.getElementById('cName').value.trim();
+      const phone = document.getElementById('cPhone').value.trim();
+      const msg = document.getElementById('cMsg').value.trim();
+
+      const text =
+        `Contact Request%0A` +
+        `Name: ${encodeURIComponent(name)}%0A` +
+        `Phone: ${encodeURIComponent(phone)}%0A` +
+        `Message: ${encodeURIComponent(msg)}%0A` +
+        `%0AFrom: ${encodeURIComponent(location.href)}`;
+
+      window.open(`https://wa.me/23272146015?text=${text}`, '_blank', 'noopener');
+      return false;
+    }
+  </script>
 </body>
 </html>

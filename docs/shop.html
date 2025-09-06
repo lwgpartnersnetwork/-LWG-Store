@@ -1,16 +1,28 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <!-- Meta -->
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
   <title>LWG Partners Network — Shop</title>
-  <meta name="description" content="Browse products on LWG Partners Network"/>
-  <link rel="icon" href="images/logo/blue-favicon-64.png"/>
+  <meta name="description" content="Browse products from LWG Partners Network. Quality • Reliability • Impact."/>
+
+  <!-- Open Graph (nice link previews) -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="LWG Partners Network — Shop">
+  <meta property="og:description" content="Shop quality products with reliable delivery.">
+  <meta property="og:image" content="images/logo/blue-logo-512.png">
+
+  <!-- Icons + CSS -->
+  <link rel="icon" href="images/logo/blue-logo-512.png"/>
   <link rel="stylesheet" href="css/styles.css"/>
+
+  <!-- Core helpers (badge, mobile nav, cart storage). Must load BEFORE products.js -->
   <script defer src="js/app.js"></script>
-  <script defer src="js/products.js"></script>
 </head>
 <body>
+  <!-- Header -->
   <header class="site-header">
     <div class="wrap header-inner">
       <a class="brand" href="index.html">
@@ -21,10 +33,12 @@
         </div>
       </a>
 
+      <!-- Mobile menu button (three spans required by CSS) -->
       <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="siteNav">
         <span></span><span></span><span></span>
       </button>
 
+      <!-- Main nav -->
       <nav class="nav" id="siteNav">
         <a href="index.html">Home</a>
         <a href="shop.html" aria-current="page">Shop</a>
@@ -35,22 +49,32 @@
     </div>
   </header>
 
+  <!-- Main -->
   <main class="wrap">
     <section class="card">
       <div class="shop-header">
         <h1>Shop</h1>
-        <div class="filters">
+
+        <div class="filters" role="search">
+          <label class="visually-hidden" for="searchInput">Search products</label>
           <input id="searchInput" type="search" placeholder="Search products…" aria-label="Search products"/>
+
+          <label class="visually-hidden" for="categoryFilter">Filter by category</label>
           <select id="categoryFilter" aria-label="Filter by category">
             <option value="">All Categories</option>
           </select>
         </div>
       </div>
 
-      <div id="productGrid" class="grid-products"></div>
+      <!-- Products injected by products.js -->
+      <div id="productGrid" class="grid-products" aria-live="polite"></div>
     </section>
   </main>
 
+  <!-- Page-specific logic (API, renderers, add-to-cart) -->
+  <script defer src="js/products.js"></script>
+
+  <!-- Footer -->
   <footer class="site-footer">
     <div class="wrap foot">
       <p>© <span id="year"></span> LWG Partners Network — Creating Impact Globally</p>
@@ -61,5 +85,10 @@
       </div>
     </div>
   </footer>
+
+  <!-- A11y helper: hide-only class for labels we still want screen readers to read -->
+  <style>
+    .visually-hidden{position:absolute!important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap}
+  </style>
 </body>
 </html>
