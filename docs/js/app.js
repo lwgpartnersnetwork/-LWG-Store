@@ -1,11 +1,14 @@
-/* ===================== API base ===================== */
-/* Uses localhost when developing, otherwise your Render API */
+/* ===================== API base ===================== *
+ * Uses localhost when developing, otherwise your Render API.
+ * IMPORTANT: the deployed base MUST NOT end with /api
+ * because other scripts append /api/... to it.
+ */
 const API_BASE =
   location.hostname === 'localhost' || location.hostname === '127.0.0.1'
     ? 'http://localhost:5000/api'
-    : 'https://lwg-api-ackk.onrender.com/api';
+    : 'https://lwg-api-ackk.onrender.com';
 
-// make it available everywhere (e.g., products.js can read window.API_BASE)
+// Make it available everywhere (e.g., products.js reads window.API_BASE)
 window.API_BASE = API_BASE;
 
 /* ==================== Common helpers ==================== */
@@ -40,7 +43,7 @@ function updateCartBadge() {
   badge.textContent = totalQty;
 }
 
-// Init: ensure cart exists & is valid
+/* ==================== Init cart store ==================== */
 (function initCart() {
   const params = new URLSearchParams(location.search);
   if (!localStorage.getItem('lwg_cart') || params.get('resetcart') === '1') {
@@ -51,7 +54,7 @@ function updateCartBadge() {
   }
 })();
 
-// ===== DOM Ready =====
+/* ==================== DOM Ready ==================== */
 document.addEventListener('DOMContentLoaded', () => {
   setYear();
   updateCartBadge();
@@ -72,6 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+/* ==================== Global events ==================== */
 // Any page updates the badge when cart changes
 window.addEventListener('cart:changed', updateCartBadge);
 
