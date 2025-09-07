@@ -44,7 +44,7 @@ const API_BASE =
   'https://lwg-api-ackk.onrender.com/api';
 
 /* ========= Feature flag ========= */
-const USE_API_PRODUCTS = true; // prefer API when possible
+const USE_API_PRODUCTS = false;
 
 /* ========= Local fallback store ========= */
 const PKEY = 'lwg_products';
