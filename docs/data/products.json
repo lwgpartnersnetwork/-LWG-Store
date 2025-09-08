@@ -3,9 +3,18 @@
     "id": "sku-156",
     "title": "Ladies Bag",
     "price": 250,
-    "category": "Women",
+    "category": "For Women",
     "image": "https://i.ibb.co/JR1CL269/Whats-App-Image-2025-09-03-at-18-22-52-e0a5a879.jpg",
     "description": "Available",
+    "stock": 10
+  }
+{
+    "id": "sku-335",
+    "title": "Slippers",
+    "price": 250,
+    "category": "For Men",
+    "image": "https://i.ibb.co/5gXgqgds/Whats-App-Image-2025-09-08-at-20-08-37-78812f93.jpg",
+    "description": "",
     "stock": 10
   }
 ]
