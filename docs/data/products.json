@@ -8,7 +8,9 @@
     "description": "Available",
     "stock": 10
   }
-{
+]
+[
+  {
     "id": "sku-335",
     "title": "Slippers",
     "price": 250,
