@@ -1,15 +1,11 @@
 /* =========================================================
-   LWG Store — products.js (API-enabled with robust fallback)
-   - Loads products from backend API (prefers server when logged in)
-   - Falls back to localStorage (no login prompt)
-   - Admin create/delete via JWT (SweetAlert login when you click Login)
-   - Cart + WhatsApp checkout
+   LWG Store — products.js (NO BACKEND / LOCAL ONLY)
+   - Products in localStorage (seeded on first run)
+   - Shop render + Cart render
+   - WhatsApp checkout with full, readable receipt
    ========================================================= */
 
 /* ========= PAYMENT META ========= */
-const API_BASE = (window.API_BASE || "https://lwg-api-ackk.onrender.com/api");
-
-
 const PAYMENT_METHODS = {
   orange: {
     label: 'Orange Money',
@@ -40,22 +36,12 @@ const PAYMENT_METHODS = {
   }
 };
 
-/* ========= YOUR API BASE (already includes /api) ========= */
-/* uses window.API_BASE if set by app.js, else falls back to your Render URL */
-
-/* ========= Feature flag ========= */
-const USE_API_PRODUCTS = true; // prefer API when possible
-
-/* ========= Local fallback store ========= */
+/* ========= Local products store ========= */
 const PKEY = 'lwg_products';
 
 function seedLocalIfEmpty() {
   let arr;
-  try {
-    arr = JSON.parse(localStorage.getItem(PKEY) || '[]');
-  } catch {
-    arr = [];
-  }
+  try { arr = JSON.parse(localStorage.getItem(PKEY) || '[]'); } catch { arr = []; }
   if (!arr.length) {
     arr = [
       {
@@ -100,116 +86,23 @@ function seedLocalIfEmpty() {
   return arr;
 }
 const getLocalProducts = () => {
-  try {
-    return JSON.parse(localStorage.getItem(PKEY) || '[]');
-  } catch {
-    return [];
-  }
+  try { return JSON.parse(localStorage.getItem(PKEY) || '[]'); } catch { return []; }
 };
-const setLocalProducts = (arr) =>
-  localStorage.setItem(PKEY, JSON.stringify(arr || []));
+const setLocalProducts = (arr) => localStorage.setItem(PKEY, JSON.stringify(arr || []));
 
-/* ========= API helpers ========= */
-async function apiGetProducts() {
-  const res = await fetch(`${API_BASE}/products`, {
-    headers: { 'Content-Type': 'application/json' }
-  });
-  if (!res.ok) throw new Error(`GET /products ${res.status}`);
-  return res.json();
-}
-
-async function apiCreateProduct(token, data) {
-  const res = await fetch(`${API_BASE}/products`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`
-    },
-    body: JSON.stringify({
-      title: data.title,
-      category: data.category || 'General',
-      price: Number(data.price || 0),
-      stock: Number(data.stock || 0),
-      image_url: data.image || '',
-      description: data.description || ''
-    })
-  });
-  if (!res.ok) throw new Error(`POST /products ${res.status}`);
-  return res.json();
-}
-
-async function apiDeleteProduct(token, id) {
-  const res = await fetch(`${API_BASE}/products/${id}`, {
-    method: 'DELETE',
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  if (!res.ok) throw new Error(`DELETE /products ${res.status}`);
-  return res.json();
-}
-
-async function apiLogin(email, password) {
-  const res = await fetch(`${API_BASE}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password })
-  });
-  if (!res.ok) throw new Error('Invalid credentials');
-  return res.json(); // { token }
-}
-
-/* ========= Admin auth ========= */
-const TOKEN_KEY = 'lwg_token';
-const getToken = () => localStorage.getItem(TOKEN_KEY) || '';
-const setToken = (t) => localStorage.setItem(TOKEN_KEY, t);
-const clearToken = () => localStorage.removeItem(TOKEN_KEY);
-
-/* Login prompt only when you click “Admin Login” (not on Save) */
-async function ensureAdminLogin() {
-  if (getToken()) return getToken();
-
-  if (!window.Swal) {
-    const email = prompt('Admin email:');
-    const pass = prompt('Password:');
-    const { token } = await apiLogin(email, pass);
-    setToken(token);
-    return token;
-  }
-
-  const { value: creds } = await Swal.fire({
-    title: 'Admin Login',
-    html:
-      '<input id="sw-email" class="swal2-input" placeholder="Email" type="email">' +
-      '<input id="sw-pass" class="swal2-input" placeholder="Password" type="password">',
-    showCancelButton: true,
-    focusConfirm: false,
-    preConfirm: () => {
-      const e = document.getElementById('sw-email').value.trim();
-      const p = document.getElementById('sw-pass').value;
-      if (!e || !p) Swal.showValidationMessage('Email and password required');
-      return { email: e, pass: p };
-    }
-  });
-
-  if (!creds) throw new Error('Login cancelled');
-
-  const { token } = await apiLogin(creds.email, creds.pass);
-  setToken(token);
-  return token;
-}
-
-/* ========= Cache & wiring ========= */
+/* ========= Simple product cache ========= */
 let PRODUCTS_CACHE = [];
 
+/* ========= DOM Ready ========= */
 document.addEventListener('DOMContentLoaded', () => {
+  // Admin page (legacy admin.html support)
   const form = document.getElementById('productForm');
   const list = document.getElementById('adminList');
   const clearBtn = document.getElementById('clearProducts');
 
-  /* ------ SAVE PRODUCT (server when logged in; otherwise local) ------ */
   if (form) {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-
       const fd = new FormData(form);
       const payload = {
         title: (fd.get('title') || '').trim(),
@@ -219,72 +112,26 @@ document.addEventListener('DOMContentLoaded', () => {
         image: (fd.get('image') || '').trim(),
         description: (fd.get('description') || '').trim()
       };
+      if (!payload.title) return alert('Title is required.');
 
-      if (!payload.title) {
-        if (window.Swal) Swal.fire('Title is required');
-        return;
-      }
+      const local = getLocalProducts();
+      local.unshift({ id: 'L' + Date.now(), ...payload });
+      setLocalProducts(local);
 
-      try {
-        let savedViaAPI = false;
-
-        // Only hit the API if we’re already logged in
-        if (USE_API_PRODUCTS && getToken()) {
-          try {
-            await apiCreateProduct(getToken(), payload);
-            savedViaAPI = true;
-            if (window.Swal)
-              Swal.fire({
-                icon: 'success',
-                title: 'Saved to server',
-                timer: 1200,
-                showConfirmButton: false
-              });
-          } catch (apiErr) {
-            console.warn('API create failed, using local fallback:', apiErr);
-          }
-        }
-
-        // Local fallback (no login needed)
-        if (!savedViaAPI) {
-          const arr = getLocalProducts();
-          arr.unshift({ id: 'L' + Date.now(), ...payload });
-          setLocalProducts(arr);
-          if (window.Swal)
-            Swal.fire({
-              icon: 'success',
-              title: 'Saved locally (fallback)',
-              timer: 1200,
-              showConfirmButton: false
-            });
-        }
-
-        form.reset();
-        await loadProducts();
-        renderAdmin();
-      } catch (err) {
-        console.error(err);
-        if (window.Swal)
-          Swal.fire({
-            icon: 'error',
-            title: 'Save failed',
-            text: String(err.message || err)
-          });
-        else alert('Save failed: ' + err.message);
-      }
+      form.reset();
+      await loadProducts();
+      renderAdmin();
     });
   }
-
   if (clearBtn) {
     clearBtn.addEventListener('click', async () => {
-      if (confirm('Delete ALL local products (dev only)?')) {
+      if (confirm('Delete ALL local products?')) {
         localStorage.removeItem(PKEY);
         await loadProducts();
         renderAdmin();
       }
     });
   }
-
   if (list) loadProducts().then(renderAdmin);
 
   // Shop page
@@ -295,15 +142,10 @@ document.addEventListener('DOMContentLoaded', () => {
   if (grid) {
     loadProducts().then(() => {
       renderShop();
-      const cats = Array.from(
-        new Set(PRODUCTS_CACHE.map((p) => p.category))
-      ).filter(Boolean);
+      const cats = Array.from(new Set(PRODUCTS_CACHE.map(p => p.category))).filter(Boolean);
       if (catSel) {
-        cats.forEach((c) => {
-          const o = document.createElement('option');
-          o.value = c;
-          o.textContent = c;
-          catSel.appendChild(o);
+        cats.forEach(c => {
+          const o = document.createElement('option'); o.value = c; o.textContent = c; catSel.appendChild(o);
         });
       }
     });
@@ -320,68 +162,28 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-/* ========= Load products (API first; use local if API empty/unavailable) ========= */
+/* ========= Load products (LOCAL ONLY) ========= */
 async function loadProducts() {
   try {
-    if (USE_API_PRODUCTS) {
-      const apiRows = await apiGetProducts(); // may be []
-      const local = getLocalProducts();
-
-      // prefer local if server returns empty but local has items
-      if ((apiRows || []).length === 0 && (local || []).length > 0) {
-        PRODUCTS_CACHE = local;
-        return PRODUCTS_CACHE;
-      }
-
-      PRODUCTS_CACHE = (apiRows || []).map((r) => ({
-        id: r.id,
-        title: r.title,
-        category: r.category || 'General',
-        price: Number(r.price || 0),
-        stock: Number(r.stock || 0),
-        image: r.image_url || '',
-        description: r.description || ''
-      }));
-      return PRODUCTS_CACHE;
-    }
-
-    PRODUCTS_CACHE = seedLocalIfEmpty();
+    PRODUCTS_CACHE = getLocalProducts();
+    if (!PRODUCTS_CACHE.length) PRODUCTS_CACHE = seedLocalIfEmpty();
     return PRODUCTS_CACHE;
-  } catch (err) {
-    console.warn('API products failed, using local:', err);
+  } catch {
     PRODUCTS_CACHE = seedLocalIfEmpty();
     return PRODUCTS_CACHE;
   }
 }
 
-/* ========= Cart helpers ========= */
+/* ========= Cart helpers (uses app.js window.__lwg) ========= */
 function addToCart(item) {
   const api = window.__lwg;
   const cart = api.readCart();
   const found = cart.find((i) => String(i.id) === String(item.id));
-  if (found) {
-    found.qty = (Number(found.qty) || 0) + 1;
-  } else {
-    cart.push({
-      id: item.id,
-      title: item.title,
-      price: item.price,
-      image: item.image,
-      qty: 1
-    });
-  }
+  if (found) found.qty = (Number(found.qty) || 0) + 1;
+  else cart.push({ id: item.id, title: item.title, price: item.price, image: item.image, qty: 1 });
   api.writeCart(cart);
 
-  if (window.Swal) {
-    Swal.fire({
-      toast: true,
-      position: 'top-end',
-      icon: 'success',
-      title: 'Added to cart',
-      showConfirmButton: false,
-      timer: 1200
-    });
-  }
+  if (window.Swal) Swal.fire({ toast:true, position:'top-end', icon:'success', title:'Added to cart', showConfirmButton:false, timer:1200 });
 }
 
 function changeQty(id, delta) {
@@ -432,8 +234,11 @@ function updatePaymentInfo() {
     return;
   }
   const meta = PAYMENT_METHODS[key];
+
+  // IMPORTANT: show newlines nicely + keep it safe
   box.style.display = 'block';
-  box.textContent = `${meta.label}\n${meta.info}`;
+  box.style.whiteSpace = 'pre-wrap';     // preserve \n
+  box.innerText = `${meta.label}\n${meta.info}`;
 }
 
 function getPaymentMeta() {
@@ -468,46 +273,13 @@ function renderAdmin() {
     list.appendChild(el);
   });
 
-  // delete (server if logged in, else local)
   list.querySelectorAll('button[data-del]').forEach((btn) => {
     btn.addEventListener('click', async () => {
       const id = btn.getAttribute('data-del');
-      try {
-        let deleted = false;
-
-        if (USE_API_PRODUCTS && getToken()) {
-          try {
-            await apiDeleteProduct(getToken(), id);
-            deleted = true;
-          } catch (e) {
-            console.warn('API delete failed, try local:', e);
-          }
-        }
-        if (!deleted) {
-          setLocalProducts(
-            getLocalProducts().filter((x) => String(x.id) !== String(id))
-          );
-        }
-
-        await loadProducts();
-        renderAdmin();
-        if (window.Swal)
-          Swal.fire({
-            icon: 'success',
-            title: 'Deleted',
-            timer: 900,
-            showConfirmButton: false
-          });
-      } catch (err) {
-        console.error(err);
-        if (window.Swal)
-          Swal.fire({
-            icon: 'error',
-            title: 'Delete failed',
-            text: String(err.message || err)
-          });
-        else alert('Delete failed: ' + err.message);
-      }
+      setLocalProducts(getLocalProducts().filter((x) => String(x.id) !== String(id)));
+      await loadProducts();
+      renderAdmin();
+      if (window.Swal) Swal.fire({ icon:'success', title:'Deleted', timer:900, showConfirmButton:false });
     });
   });
 }
@@ -524,7 +296,8 @@ function renderShop() {
     (p) =>
       (!cat || p.category === cat) &&
       (p.title.toLowerCase().includes(q) ||
-        (p.category || '').toLowerCase().includes(q))
+        (p.category || '').toLowerCase().includes(q) ||
+        (p.description || '').toLowerCase().includes(q))
   );
 
   grid.innerHTML = '';
@@ -541,8 +314,7 @@ function renderShop() {
         <span class="small muted">${p.category || 'General'}</span>
         <span class="price">NLe ${(+p.price || 0).toFixed(2)}</span>
         <button class="btn primary">Add to Cart</button>
-      </div>
-    `;
+      </div>`;
     card.querySelector('button').addEventListener('click', () => addToCart(p));
     grid.appendChild(card);
   });
@@ -580,16 +352,14 @@ function renderCart() {
         <span>${qty}</span>
         <button data-id="${item.id}" data-delta="1">+</button>
       </div>
-      <button class="btn" data-remove="${item.id}">Remove</button>
-    `;
+      <button class="btn" data-remove="${item.id}">Remove</button>`;
     container.appendChild(row);
   });
 
   const fee = getDeliveryFee();
   const grand = subtotal + fee;
 
-  document.getElementById('cartSubtotal')?.textContent =
-    subtotal.toFixed(2);
+  document.getElementById('cartSubtotal')?.textContent = subtotal.toFixed(2);
   document.getElementById('deliveryFee')?.textContent = fee.toFixed(2);
   document.getElementById('cartTotal')?.textContent = grand.toFixed(2);
 
@@ -599,27 +369,15 @@ function renderCart() {
     );
   });
   container.querySelectorAll('button[data-remove]').forEach((b) => {
-    b.addEventListener('click', () =>
-      removeItem(b.getAttribute('data-remove'))
-    );
+    b.addEventListener('click', () => removeItem(b.getAttribute('data-remove')));
   });
 
-  // Checkout via WhatsApp (+ optional server save)
+  // Checkout via WhatsApp (no server save)
   const checkoutBtn = document.getElementById('checkoutBtn');
   if (checkoutBtn) {
     checkoutBtn.textContent = 'Checkout via WhatsApp';
     checkoutBtn.onclick = async () => {
-      if (!cart.length) {
-        if (window.Swal) {
-          await Swal.fire({
-            icon: 'warning',
-            title: 'Empty Cart',
-            text: 'Add items before checkout.',
-            confirmButtonColor: '#002F5F'
-          });
-        } else alert('Your cart is empty.');
-        return;
-      }
+      if (!cart.length) return alert('Your cart is empty.');
 
       const name = (document.getElementById('custName')?.value || '').trim();
       const address = (document.getElementById('custAddress')?.value || '').trim();
@@ -629,65 +387,17 @@ function renderCart() {
 
       const now = new Date();
       const pad = (n) => String(n).padStart(2, '0');
-      const fallbackOrderId = `LWG-${now.getFullYear()}${pad(
-        now.getMonth() + 1
-      )}${pad(now.getDate())}-${pad(now.getHours())}${pad(
-        now.getMinutes()
-      )}${pad(now.getSeconds())}`;
-
-      const payload = {
-        customer_name: name,
-        phone,
-        address,
-        delivery_location: locationLabel,
-        delivery_fee: fee,
-        subtotal,
-        total: subtotal + fee,
-        payment_method: payment.label || '',
-        payment_info: payment.info || '',
-        source_url: location.href,
-        items: cart.map((i) => ({
-          title: i.title,
-          price: Number(i.price),
-          qty: Number(i.qty),
-          image_url: i.image || ''
-        }))
-      };
-
-      if (window.Swal) {
-        await Swal.fire({
-          title: 'Saving your order…',
-          allowOutsideClick: false,
-          showConfirmButton: false,
-          didOpen: () => Swal.showLoading()
-        });
-      }
-
-      let serverOrder = null;
-      try {
-        const res = await fetch(`${API_BASE}/orders`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        serverOrder = res.ok ? await res.json() : null;
-      } catch {
-        serverOrder = null;
-      }
-      const orderId = serverOrder?.id ? `#${serverOrder.id}` : fallbackOrderId;
-
-      if (window.Swal) Swal.close();
+      const orderId = `LWG-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
 
       const lines = cart.map((i, idx) => {
         const price = Number(i.price) || 0;
         const qty = Number(i.qty) || 0;
         const lineTotal = price * qty;
-        return `${idx + 1}. ${i.title}  |  Qty: ${qty}  |  @ NLe ${price.toFixed(
-          2
-        )}  |  Line: NLe ${lineTotal.toFixed(2)}`;
+        return `${idx + 1}. ${i.title}  |  Qty: ${qty}  |  @ NLe ${price.toFixed(2)}  |  Line: NLe ${lineTotal.toFixed(2)}`;
       });
 
-      const message = `NEW ORDER — ${orderId}
+      const message =
+`NEW ORDER — ${orderId}
 Items:
 ${lines.join('\n')}
 
@@ -699,9 +409,7 @@ Customer: ${name || '—'} | ${phone || '—'}
 Address: ${address || '—'}
 
 Payment: ${payment.label || '—'}
-${payment.info ? 'Payment Details:\n' + payment.info + '\n' : ''}Source: ${
-        location.href
-      }`;
+${payment.info ? 'Payment Details:\n' + payment.info + '\n' : ''}Source: ${location.href}`;
 
       window.open(
         `https://wa.me/23272146015?text=${encodeURIComponent(message)}`,
@@ -709,42 +417,13 @@ ${payment.info ? 'Payment Details:\n' + payment.info + '\n' : ''}Source: ${
         'noopener'
       );
 
-      if (window.Swal) {
-        Swal.fire({
-          icon: 'success',
-          title: 'Order sent to WhatsApp',
-          timer: 1500,
-          showConfirmButton: false
-        });
-      }
-
+      // Empty cart after sending
       window.__lwg.writeCart([]);
-      setTimeout(() => location.reload(), 1800);
+      setTimeout(() => location.reload(), 1200);
     };
   }
 }
 
-/* ========= Admin helpers for page buttons ========= */
-window.LWG_AUTH = {
-  async login() {
-    return ensureAdminLogin();
-  },
-  logout() {
-    clearToken();
-  },
-  isLoggedIn() {
-    return !!getToken();
-  }
-};
-
 /* ========= Events ========= */
-window.addEventListener('admin:refresh', async () => {
-  await loadProducts();
-  renderAdmin();
-});
-
-window.addEventListener('cart:changed', () => {
-  try {
-    renderCart();
-  } catch {}
-});
+window.addEventListener('admin:refresh', async () => { await loadProducts(); renderAdmin(); });
+window.addEventListener('cart:changed', () => { try { renderCart(); } catch {} });
