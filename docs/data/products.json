@@ -34,5 +34,14 @@
     "image": "https://i.ibb.co/qLNs3yr6/e0b61954-1377-4c78-88c1-a5a79ff88dfb.png",
     "description": "Stylish two-tone polo shirt featuring a navy top with white body and sleeves. Lightweight, breathable, and perfect for casual or semi-formal wear",
     "stock": 10
+  }, 
+  {
+    "id": "sku-103",
+    "title": "Luxury Croc-Embossed Handbag – Black with Gold Accents",
+    "price": 250,
+    "category": "Women",
+    "image": "https://i.ibb.co/KQyHbBW/922c53ea-11fa-49b7-a46c-e13dbec96a4b.png",
+    "description": "Elegant croc-embossed handbag in glossy black, featuring a structured top handle with gold-tone hardware and a signature V-shaped clasp. Perfect for both formal and casual outings.",
+    "stock": 10
   }
 ]
