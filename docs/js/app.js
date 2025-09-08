@@ -6,7 +6,7 @@
 const API_BASE =
   location.hostname === 'localhost' || location.hostname === '127.0.0.1'
     ? 'http://localhost:5000/api'
-    : 'https://lwg-api-ackk.onrender.com';
+    : 'https://lwg-api-ackk.onrender.com/api';
 
 // Make it available everywhere (e.g., products.js reads window.API_BASE)
 window.API_BASE = API_BASE;

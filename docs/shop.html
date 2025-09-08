@@ -8,7 +8,7 @@
   <meta name="description" content="Browse products from LWG Partners Network. Quality • Reliability • Impact."/>
   <meta name="theme-color" content="#002F5F"/>
 
-  <!-- Open Graph (nice link previews) -->
+  <!-- Open Graph -->
   <meta property="og:type" content="website">
   <meta property="og:title" content="LWG Partners Network — Shop">
   <meta property="og:description" content="Shop quality products with reliable delivery.">
@@ -18,8 +18,59 @@
   <link rel="icon" href="images/logo/blue-logo-512.png"/>
   <link rel="stylesheet" href="css/styles.css"/>
 
-  <!-- Core helpers (badge, mobile nav, cart storage). Must load BEFORE products.js -->
-  <script defer src="js/app.js?v=2025-09-07-1"></script>
+  <!-- Core helpers (badge, mobile nav) -->
+  <script defer src="js/app.js"></script>
+
+  <!-- Page-only tweaks -->
+  <style>
+    /* Admin-only container is hidden unless body[data-admin="true"] */
+    .admin-only { display: none; }
+    body[data-admin="true"] .admin-only { display: block; }
+
+    /* Keep your look; only scoped helpers below */
+    .shop-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .shop-tools .btn{padding:8px 12px;border-radius:10px;border:1px solid #d8e1ee;background:#f8fafc;cursor:pointer}
+    .shop-tools .btn.primary{background:#002F5F;color:#fff;border-color:#002F5F}
+
+    details.add-panel{background:#fff;border:1px solid #e3e8ef;border-radius:14px;padding:12px;margin:10px 0}
+    details.add-panel summary{list-style:none;outline:0;cursor:pointer;font-weight:600}
+    details.add-panel summary::-webkit-details-marker{display:none}
+
+    .form-grid{display:grid;gap:10px;grid-template-columns:repeat(2,1fr)}
+    .form-grid .span-2{grid-column:1/-1}
+    .form-grid label{display:flex;flex-direction:column;gap:6px}
+    .form-grid input,.form-grid select,.form-grid textarea{
+      padding:10px;border:1px solid #d8e1ee;border-radius:10px
+    }
+    .img-preview{display:inline-block;width:110px;height:110px;border:1px dashed #d8e1ee;border-radius:10px;background:#f8fafc;object-fit:cover}
+
+    /* Product grid tidy-ups */
+    .grid-products{margin-top:12px}
+    .product-card{display:flex;flex-direction:column;gap:8px}
+
+    /* Uniform image box (consistent size/height) */
+    :root { --card-img-h: clamp(170px, 28vw, 240px); }
+    .product-card .media{
+      width:100%; height:var(--card-img-h);
+      border-radius:10px; overflow:hidden; background:#f1f5f9;
+    }
+    .product-card .media img{width:100%; height:100%; object-fit:cover; display:block}
+
+    .product-desc{color:#475569;font-size:.92rem;
+      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; min-height:2.6em}
+    .product-card h3{
+      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; min-height:2.4em
+    }
+    .product-actions{display:flex;gap:6px;margin-top:6px;align-items:center;flex-wrap:wrap}
+    .product-actions .btn.small{padding:6px 8px;font-size:.9rem;border-radius:8px;border:1px solid #d8e1ee;background:#f8fafc}
+    .product-actions .btn.primary.small{background:#002F5F;color:#fff;border-color:#002F5F}
+    .product-actions .btn.danger{background:#fff1f2;border-color:#fecdd3}
+
+    .qty-input{width:70px;text-align:center;padding:6px;border:1px solid #d8e1ee;border-radius:8px}
+
+    .notice{border:1px dashed #eab308;background:#fffbea;color:#854d0e;padding:10px;border-radius:10px}
+    .visually-hidden{position:absolute!important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap;}
+  </style>
 </head>
 <body>
   <!-- Header -->
@@ -66,13 +117,65 @@
         </div>
       </div>
 
-      <!-- Products injected by products.js -->
+      <!-- ===== ADMIN-ONLY: hidden for customers ===== -->
+      <div class="admin-only">
+        <div class="shop-tools">
+          <button id="btnExport" class="btn">Export products (JSON)</button>
+          <button id="btnImport" class="btn">Import products (JSON)</button>
+          <button id="btnClear" class="btn">Clear all products</button>
+        </div>
+
+        <details class="add-panel">
+          <summary>➕ Add a Product</summary>
+          <div style="margin-top:10px">
+            <div class="form-grid">
+              <label>Product ID
+                <input id="pId" placeholder="sku-001"/>
+              </label>
+              <label>Title
+                <input id="pTitle" placeholder="Product title"/>
+              </label>
+              <label>Price (NLe)
+                <input id="pPrice" type="number" min="0" step="1" placeholder="250"/>
+              </label>
+              <label>Category
+                <input id="pCategory" placeholder="Men / Women / Kids / Essentials"/>
+              </label>
+
+              <!-- Image: URL path or pick a file (stored as base64 data URL) -->
+              <label>Image URL / Path
+                <input id="pImage" placeholder="images/products/polo1.jpg"/>
+              </label>
+              <label>Or choose image file
+                <input id="pImageFile" type="file" accept="image/*"/>
+              </label>
+              <div class="span-2">
+                <img id="pPreview" class="img-preview" alt="preview"/>
+              </div>
+
+              <label class="span-2">Writings / Description
+                <textarea id="pDesc" rows="3" placeholder="Short description for this product"></textarea>
+              </label>
+              <label>Stock
+                <input id="pStock" type="number" min="0" step="1" placeholder="50"/>
+              </label>
+              <div class="span-2" style="display:flex; gap:8px; flex-wrap:wrap">
+                <button id="btnAdd" class="btn primary">Add Product</button>
+                <button id="btnReset" class="btn">Reset</button>
+              </div>
+            </div>
+            <p class="notice" style="margin-top:10px">
+              Admin tip: open <b>shop.html#admin</b> (or <b>?admin=1</b>) to show this panel on any device. You can also Export/Import JSON to move your catalog.
+            </p>
+          </div>
+        </details>
+      </div>
+      <!-- ===== /ADMIN-ONLY ===== -->
+
+      <!-- Products grid -->
       <div id="productGrid" class="grid-products" aria-live="polite"></div>
     </section>
   </main>
-
-  <!-- Page-specific logic (API, renderers, add-to-cart) -->
-  <script defer src="js/products.js?v=2025-09-07-1"></script>
 
   <!-- Footer -->
   <footer class="site-footer">
@@ -86,15 +189,241 @@
     </div>
   </footer>
 
-  <!-- A11y helper: hide-only class for labels we still want screen readers to read -->
+  <!-- A11y helper -->
   <style>
-    .visually-hidden {
-      position:absolute!important;
-      height:1px;width:1px;
-      overflow:hidden;
-      clip:rect(1px,1px,1px,1px);
-      white-space:nowrap
-    }
+    .visually-hidden{position:absolute!important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap;}
   </style>
+
+  <!-- Inline script: localStorage products + Admin Mode toggle -->
+  <script>
+    (function(){
+      const KEY = 'lwg_products';
+      const ADMIN_KEY = 'lwg_admin'; // "1" => admin mode on
+      const CART_KEY = 'lwg_cart';
+
+      const $ = (s, el=document)=>el.querySelector(s);
+
+      // helpers
+      const escapeHtml = (s='') => String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+      const escapeAttr = (s='') => escapeHtml(s).replaceAll('"','&quot;');
+      const num = v => Number(String(v).replace(/[^\d.-]/g, '')) || 0;
+      const money = (n)=> new Intl.NumberFormat('en-SL',{maximumFractionDigits:0}).format(num(n));
+
+      /* -------- Admin toggle: URL hash/query + keyboard + mobile gestures -------- */
+      function setAdmin(on){
+        document.body.setAttribute('data-admin', on ? 'true' : 'false');
+        localStorage.setItem(ADMIN_KEY, on ? '1' : '0');
+      }
+      function adminRequested(){
+        const h = (location.hash||'').toLowerCase();
+        const q = (location.search||'').toLowerCase();
+        return h.includes('admin') || q.includes('admin=1');
+      }
+      setAdmin(localStorage.getItem(ADMIN_KEY) === '1' || adminRequested());
+      window.addEventListener('hashchange', ()=>{ if (adminRequested()) setAdmin(true); });
+
+      // Desktop key: Alt+Shift+A
+      window.addEventListener('keydown', (e)=>{
+        if (e.altKey && e.shiftKey && (e.key.toLowerCase() === 'a')) {
+          e.preventDefault();
+          setAdmin(document.body.getAttribute('data-admin') !== 'true');
+        }
+      });
+      // Mobile gestures: long press or 5 quick taps on the brand
+      const brand = document.querySelector('.brand');
+      if (brand){
+        let holdTimer=null;
+        brand.addEventListener('touchstart', ()=> { holdTimer = setTimeout(()=> setAdmin(document.body.getAttribute('data-admin') !== 'true'), 700); });
+        ['touchend','touchcancel','touchmove'].forEach(ev=> brand.addEventListener(ev, ()=> clearTimeout(holdTimer)));
+        let taps=0, tapTimer=null;
+        brand.addEventListener('click', ()=>{
+          taps++;
+          if (!tapTimer){
+            tapTimer = setTimeout(()=>{
+              if (taps >= 5) setAdmin(document.body.getAttribute('data-admin') !== 'true');
+              taps=0; tapTimer=null;
+            }, 500);
+          }
+        });
+      }
+
+      /* -------- Elements -------- */
+      const grid = $('#productGrid');
+      const search = $('#searchInput');
+      const catSel = $('#categoryFilter');
+      const previewEl = $('#pPreview');
+      const fileInputEl = $('#pImageFile');
+      const pImageInputEl = $('#pImage');
+
+      /* -------- Products storage -------- */
+      function readProducts(){ try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; } }
+      function writeProducts(arr){ localStorage.setItem(KEY, JSON.stringify(arr)); buildCategories(arr); render(); }
+
+      /* -------- Categories -------- */
+      function buildCategories(items){
+        if (!catSel) return;
+        const keep = catSel.value || '';
+        const cats = Array.from(new Set(items.map(p=>p.category).filter(Boolean))).sort();
+        catSel.innerHTML = '<option value="">All Categories</option>' + cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+        if (cats.includes(keep)) catSel.value = keep;
+      }
+
+      /* -------- Render grid (uniform image box) -------- */
+      function render(){
+        const items = readProducts();
+        const term = (search?.value||'').toLowerCase();
+        const cat  = catSel?.value || '';
+        const admin = document.body.getAttribute('data-admin') === 'true';
+
+        const list = items.filter(p=>{
+          const okTerm = !term || (String(p.title||'').toLowerCase().includes(term) || String(p.description||'').toLowerCase().includes(term));
+          const okCat  = !cat  || String(p.category||'') === cat;
+          return okTerm && okCat;
+        });
+
+        if (!list.length){
+          grid.innerHTML = '<div class="card" style="border-color:#eab308">No products yet. Add some (admin only).</div>';
+          return;
+        }
+
+        grid.innerHTML = list.map(p=>`
+          <article class="product-card" data-id="${escapeAttr(p.id)}">
+            <div class="media">
+              <img src="${escapeAttr(p.image||'')}" alt="${escapeAttr(p.title||'')}"
+                   onerror="this.src='images/logo/blue-logo-512.png'"/>
+            </div>
+            <h3>${escapeHtml(p.title||'')}</h3>
+            <div class="muted">${escapeHtml(p.category||'')}</div>
+            <p class="product-desc">${escapeHtml(p.description||'')}</p>
+            <div class="price">NLe ${money(p.price)}</div>
+            <div class="product-actions">
+              <button class="btn small" data-action="minus">−</button>
+              <input class="qty-input" type="number" value="1" min="1" max="${Number(p.stock||0)}"/>
+              <button class="btn small" data-action="plus">+</button>
+              <button class="btn primary small" data-action="add">Add to Cart</button>
+              ${admin ? '<button class="btn small danger" data-action="del" title="Remove product">Delete</button>' : ''}
+            </div>
+          </article>
+        `).join('');
+      }
+
+      /* -------- Cart badge -------- */
+      const readCart = () => { try { return JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch { return []; } };
+      const writeCart = (items) => { localStorage.setItem(CART_KEY, JSON.stringify(items)); updateBadge(); };
+      function updateBadge(){
+        const cart = readCart();
+        const count = cart.reduce((a,it)=>a + (num(it.qty)||0), 0);
+        const bd = document.getElementById('cartBadge');
+        if (bd) bd.textContent = String(count);
+      }
+
+      /* -------- Search / Category -------- */
+      if (search)  search.addEventListener('input', render);
+      if (catSel)  catSel.addEventListener('change', render);
+
+      /* -------- Grid actions -------- */
+      grid.addEventListener('click', (e)=>{
+        const btn = e.target.closest('button'); if (!btn) return;
+        const card = btn.closest('.product-card'); if (!card) return;
+        const id = card.dataset.id;
+        const items = readProducts();
+        const product = items.find(p=>String(p.id)===String(id));
+        const qtyInput = card.querySelector('.qty-input');
+
+        if (btn.dataset.action === 'minus') qtyInput.value = Math.max(1, parseInt(qtyInput.value||'1') - 1);
+        if (btn.dataset.action === 'plus')  qtyInput.value = Math.min(Number(product?.stock||9999), parseInt(qtyInput.value||'1') + 1);
+        if (btn.dataset.action === 'add'){
+          const qty = Math.max(1, Math.min(Number(product?.stock||9999), parseInt(qtyInput.value||'1')));
+          const cart = readCart();
+          const ex = cart.find(it=>String(it.id)===String(id));
+          if (ex) ex.qty = (num(ex.qty) + qty); else cart.push({ id, qty });
+          writeCart(cart);
+          btn.textContent = 'Added ✓'; setTimeout(()=> btn.textContent='Add to Cart', 900);
+        }
+        if (btn.dataset.action === 'del'){
+          writeProducts(items.filter(p=>String(p.id)!==String(id)));
+        }
+      });
+
+      /* -------- ADMIN: add/reset/export/import/clear -------- */
+      const btnAdd   = document.getElementById('btnAdd');
+      const btnReset = document.getElementById('btnReset');
+      const btnExport= document.getElementById('btnExport');
+      const btnImport= document.getElementById('btnImport');
+      const btnClear = document.getElementById('btnClear');
+
+      // Image file -> base64 preview
+      if (fileInputEl){
+        fileInputEl.addEventListener('change', ()=>{
+          const f = fileInputEl.files?.[0]; if (!f) return;
+          const r = new FileReader();
+          r.onload = () => { pImageInputEl.value = String(r.result||''); if (previewEl) previewEl.src = pImageInputEl.value; };
+          r.readAsDataURL(f);
+        });
+      }
+      if (pImageInputEl) pImageInputEl.addEventListener('input', ()=>{ if (previewEl) previewEl.src = pImageInputEl.value; });
+
+      if (btnAdd) btnAdd.addEventListener('click', ()=>{
+        const p = {
+          id: document.getElementById('pId').value.trim() || ('sku-' + Math.floor(100+Math.random()*900)),
+          title: document.getElementById('pTitle').value.trim(),
+          price: num(document.getElementById('pPrice').value),
+          category: document.getElementById('pCategory').value.trim(),
+          image: document.getElementById('pImage').value.trim(),
+          description: document.getElementById('pDesc').value.trim(),
+          stock: num(document.getElementById('pStock').value)
+        };
+        const items = readProducts();
+        if (!p.title){ alert('Title is required.'); return; }
+        if (items.some(x=>String(x.id)===String(p.id))){
+          alert('A product with this ID already exists. Use a unique ID.');
+          return;
+        }
+        items.push(p);
+        writeProducts(items);
+
+        ['pTitle','pPrice','pCategory','pImage','pDesc','pStock','pId'].forEach(id=>{ const el = document.getElementById(id); if(el) el.value=''; });
+        if (fileInputEl) fileInputEl.value = '';
+        if (previewEl) previewEl.removeAttribute('src');
+      });
+
+      if (btnReset) btnReset.addEventListener('click', ()=>{
+        ['pId','pTitle','pPrice','pCategory','pImage','pDesc','pStock'].forEach(id=>{ const el = document.getElementById(id); if(el) el.value=''; });
+        if (fileInputEl) fileInputEl.value = '';
+        if (previewEl) previewEl.removeAttribute('src');
+      });
+
+      if (btnExport) btnExport.addEventListener('click', ()=>{
+        const blob = new Blob([JSON.stringify(readProducts(), null, 2)], {type:'application/json'});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'products.json'; a.click(); URL.revokeObjectURL(a.href);
+      });
+
+      if (btnImport) btnImport.addEventListener('click', ()=>{
+        const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'application/json,.json';
+        inp.addEventListener('change', async ()=>{
+          const f = inp.files?.[0]; if(!f) return;
+          try {
+            const text = await f.text(); const arr = JSON.parse(text);
+            if (!Array.isArray(arr)) throw new Error('JSON must be an array');
+            writeProducts(arr);
+          } catch { alert('Invalid JSON file.'); }
+        });
+        inp.click();
+      });
+
+      if (btnClear) btnClear.addEventListener('click', ()=>{ if (confirm('Clear ALL products?')) writeProducts([]); });
+
+      // Boot
+      buildCategories(readProducts());
+      render();
+      // initial badge sync
+      (function initBadge(){
+        const cart = readCart();
+        const count = cart.reduce((a,it)=>a + (num(it.qty)||0), 0);
+        const bd = document.getElementById('cartBadge');
+        if (bd) bd.textContent = String(count);
+      })();
+    })();
+  </script>
 </body>
 </html>

@@ -22,9 +22,8 @@
   <!-- CSS -->
   <link rel="stylesheet" href="css/styles.css"/>
 
-  <!-- JS (order matters): core helpers -> products (cart/checkout) -> SweetAlert -->
+  <!-- Header utilities -->
   <script defer src="js/app.js?v=2025-09-07-1"></script>
-  <script defer src="js/products.js?v=2025-09-07-1"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
@@ -32,7 +31,6 @@
   <header class="site-header">
     <div class="wrap header-inner">
       <a class="brand" href="index.html">
-        <!-- Use the banner logo for crisp header rendering -->
         <img src="images/logo/blue-logo-banner.png" alt="LWG Partners Network"/>
         <div class="brand-text">
           <strong>LWG Partners Network</strong>
@@ -64,7 +62,7 @@
     <section class="card" aria-labelledby="cartTitle">
       <h1 id="cartTitle">Your Cart</h1>
 
-      <!-- Line items injected by products.js -->
+      <!-- Line items -->
       <div id="cartItems" aria-live="polite"></div>
 
       <!-- Totals -->
@@ -140,13 +138,189 @@
     </div>
   </footer>
 
-  <!-- No-JS notice (very small, just in case) -->
-  <noscript>
-    <div class="wrap" style="margin-top:10px">
-      <div class="card" style="border-color:#ef4444">
-        JavaScript is required for cart and checkout to work. Please enable it in your browser.
-      </div>
-    </div>
-  </noscript>
+  <!-- Robust cart logic -->
+  <script>
+    (function(){
+      const CART_KEY = 'lwg_cart';
+      const PROD_KEY = 'lwg_products';
+
+      const $ = (s, el=document)=>el.querySelector(s);
+      const listEl      = $('#cartItems');
+      const subtotalEl  = $('#cartSubtotal');
+      const deliveryEl  = $('#deliveryFee');
+      const totalEl     = $('#cartTotal');
+      const locationSel = $('#deliveryLocation');
+      const paySel      = $('#paymentMethod');
+      const payInfo     = $('#paymentInfo');
+      const checkoutBtn = $('#checkoutBtn');
+
+      // Helpers
+      const num   = v => Number(String(v).replace(/[^\d.-]/g, '')) || 0; // handles "250,000", "NLe 250"
+      const money = n => new Intl.NumberFormat('en-SL', { maximumFractionDigits: 0 }).format(num(n));
+
+      const readCart      = () => { try { return JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch { return []; } };
+      const writeCart     = (items) => localStorage.setItem(CART_KEY, JSON.stringify(items));
+      const readProducts  = () => { try { return JSON.parse(localStorage.getItem(PROD_KEY)) || []; } catch { return []; } };
+
+      // Merge duplicate IDs just in case
+      function normalizeCart(arr){
+        const map = new Map();
+        arr.forEach(it=>{
+          const id = String(it.id);
+          const qty = num(it.qty || 0);
+          map.set(id, (map.get(id) || 0) + qty);
+        });
+        return Array.from(map, ([id, qty]) => ({ id, qty }));
+      }
+
+      function hydrate(cart){
+        const normalized = normalizeCart(cart);
+        const catalog = readProducts();
+        const pm = new Map(catalog.map(p => [String(p.id), p]));
+        return normalized.map(item=>{
+          const p = pm.get(String(item.id)) || {};
+          const price = num(p.price);
+          const qty   = num(item.qty);
+          const line  = price * qty;
+          return { id: item.id, qty, price, line, title:p.title||'Product', image:p.image||'', category:p.category||'' };
+        });
+      }
+
+      function render(){
+        const rows = hydrate(readCart());
+
+        if (!rows.length){
+          listEl.innerHTML = '<div class="card" style="border-color:#eab308">Your cart is empty.</div>';
+        } else {
+          listEl.innerHTML = rows.map(it => `
+            <div class="cart-row" data-id="${String(it.id)}" style="display:grid;grid-template-columns:80px 1fr auto auto auto;gap:10px;align-items:center;border-bottom:1px solid #e9eef5;padding:8px 0;">
+              <img src="${it.image || 'images/logo/blue-logo-512.png'}" alt="${it.title}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;background:#f1f5f9"/>
+              <div>
+                <div class="title" style="font-weight:600">${it.title}</div>
+                <div class="muted">${it.category}</div>
+              </div>
+              <div>Price: NLe ${money(it.price)}</div>
+              <div class="qty" style="display:flex;gap:6px;align-items:center;">
+                <button class="btn ghost" data-action="dec">−</button>
+                <input class="qty-input" type="number" min="1" value="${it.qty}" style="width:70px;text-align:center"/>
+                <button class="btn ghost" data-action="inc">+</button>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <div>Line: <b>NLe ${money(it.line)}</b></div>
+                <button class="btn" title="Remove" data-action="remove">✕</button>
+              </div>
+            </div>`).join('');
+        }
+
+        // totals
+        const subtotal = rows.reduce((a, r) => a + num(r.line), 0);
+        const fee = (() => {
+          const val = locationSel.value || '|0';
+          const feeStr = val.split('|')[1] || '0';
+          return num(feeStr);
+        })();
+
+        subtotalEl.textContent = money(subtotal);
+        deliveryEl.textContent = money(fee);
+        totalEl.textContent    = money(subtotal + fee);
+
+        // badge
+        const bd = document.getElementById('cartBadge');
+        if (bd) bd.textContent = String(rows.reduce((a, r) => a + num(r.qty), 0));
+      }
+
+      // Qty & remove
+      listEl.addEventListener('click', (e)=>{
+        const btn = e.target.closest('button'); if (!btn) return;
+        const row = btn.closest('.cart-row'); if (!row) return;
+        const id  = row.dataset.id;
+        const cart = normalizeCart(readCart());
+        const item = cart.find(it => String(it.id) === String(id));
+        if (!item) return;
+
+        if (btn.dataset.action === 'remove'){
+          writeCart(cart.filter(it => String(it.id) !== String(id)));
+          render();
+        } else if (btn.dataset.action === 'inc' || btn.dataset.action === 'dec'){
+          let q = num(item.qty);
+          q += (btn.dataset.action === 'inc') ? 1 : -1;
+          item.qty = Math.max(1, q);
+          writeCart(cart);
+          render();
+        }
+      });
+
+      listEl.addEventListener('input', (e)=>{
+        const input = e.target.closest('.qty-input'); if (!input) return;
+        const row = input.closest('.cart-row'); const id = row.dataset.id;
+        const cart = normalizeCart(readCart());
+        const item = cart.find(it => String(it.id) === String(id));
+        if (!item) return;
+        item.qty = Math.max(1, num(input.value));
+        writeCart(cart);
+        render();
+      });
+
+      // Delivery fee & payment info
+      locationSel.addEventListener('change', render);
+
+      paySel.addEventListener('change', () => {
+        const m = paySel.value;
+        const map = {
+          orange: 'Pay with <b>Orange Money</b>: Name: LWG Partners Network · Number: <code>+232 721 46015</code>.',
+          africell: 'Pay with <b>Africell Money</b>: Name: LWG Partners Network · Number: <code>+232 721 46015</code>.',
+          bank: 'Bank Transfer: Bank: <b>To be provided</b>. Use your phone number as reference.',
+          cod: 'Cash on Delivery: Pay on arrival.'
+        };
+        if (map[m]) { payInfo.style.display='block'; payInfo.innerHTML = map[m]; }
+        else { payInfo.style.display='none'; payInfo.textContent=''; }
+      });
+
+      // Checkout (WhatsApp) — FULLY ENCODED + CLEAR CART AFTER
+      checkoutBtn.addEventListener('click', () => {
+        const name = document.getElementById('custName').value.trim();
+        const phone = document.getElementById('custPhone').value.trim();
+        const addr = document.getElementById('custAddress').value.trim();
+        const [locSlug, feeStr] = (locationSel.value || '|0').split('|');
+        const loc = (locSlug || '').trim();
+        const fee = num(feeStr);
+        const pay = (paySel.value || '').trim();
+
+        const rows = hydrate(readCart());
+        if (!rows.length) { alert('Your cart is empty.'); return; }
+        if (!name || !phone || !addr || !loc || !pay) { alert('Please fill all delivery and payment fields.'); return; }
+
+        const sub   = rows.reduce((a, r) => a + num(r.line), 0);
+        const total = sub + fee;
+        const lines = rows.map(x => `• ${x.title} × ${x.qty} — NLe ${money(x.line)}`).join('\n');
+
+        const msg = [
+          'Hello LWG,',
+          '',
+          "I'd like to place an order:",
+          lines,
+          '',
+          `Subtotal: NLe ${money(sub)}`,
+          `Delivery (${loc}): NLe ${money(fee)}`,
+          `Total: NLe ${money(total)}`,
+          '',
+          `Name: ${name}`,
+          `Phone: ${phone}`,
+          `Address: ${addr}`,
+          `Payment: ${pay.toUpperCase()}`
+        ].join('\n');
+
+        const url = `https://wa.me/23272146015?text=${encodeURIComponent(msg)}`;
+        window.open(url, '_blank');
+
+        // Clear cart AFTER we open WhatsApp
+        writeCart([]);
+        render();
+      });
+
+      // Initial draw
+      render();
+    })();
+  </script>
 </body>
 </html>

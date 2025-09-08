@@ -7,6 +7,9 @@
    ========================================================= */
 
 /* ========= PAYMENT META ========= */
+const API_BASE = (window.API_BASE || "https://lwg-api-ackk.onrender.com/api");
+
+
 const PAYMENT_METHODS = {
   orange: {
     label: 'Orange Money',
@@ -39,12 +42,9 @@ const PAYMENT_METHODS = {
 
 /* ========= YOUR API BASE (already includes /api) ========= */
 /* uses window.API_BASE if set by app.js, else falls back to your Render URL */
-const API_BASE =
-  (typeof window !== 'undefined' && window.API_BASE) ||
-  'https://lwg-api-ackk.onrender.com/api';
 
 /* ========= Feature flag ========= */
-const USE_API_PRODUCTS = false;
+const USE_API_PRODUCTS = true; // prefer API when possible
 
 /* ========= Local fallback store ========= */
 const PKEY = 'lwg_products';
