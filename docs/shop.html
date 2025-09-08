@@ -27,7 +27,7 @@
     .admin-only { display: none; }
     body[data-admin="true"] .admin-only { display: block; }
 
-    /* Keep your look; only scoped helpers below */
+    /* Tools / controls (admin) */
     .shop-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
     .shop-tools .btn{padding:8px 12px;border-radius:10px;border:1px solid #d8e1ee;background:#f8fafc;cursor:pointer}
     .shop-tools .btn.primary{background:#002F5F;color:#fff;border-color:#002F5F}
@@ -53,19 +53,20 @@
     .product-card .media{
       width:100%; height:var(--card-img-h);
       border-radius:10px; overflow:hidden; background:#f1f5f9;
+      margin-bottom:8px; /* small consistent gap */
     }
     .product-card .media img{width:100%; height:100%; object-fit:cover; display:block}
 
-    .product-desc{color:#475569;font-size:.92rem;
-      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; min-height:2.6em}
-    .product-card h3{
-      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; min-height:2.4em
+    /* Tighten text spacing below image on mobile */
+    .product-card h3{margin:0 0 4px}
+    .product-desc{
+      color:#475569;font-size:.92rem;margin:0 0 6px;
+      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; min-height:2.6em
     }
     .product-actions{display:flex;gap:6px;margin-top:6px;align-items:center;flex-wrap:wrap}
     .product-actions .btn.small{padding:6px 8px;font-size:.9rem;border-radius:8px;border:1px solid #d8e1ee;background:#f8fafc}
     .product-actions .btn.primary.small{background:#002F5F;color:#fff;border-color:#002F5F}
     .product-actions .btn.danger{background:#fff1f2;border-color:#fecdd3}
-
     .qty-input{width:70px;text-align:center;padding:6px;border:1px solid #d8e1ee;border-radius:8px}
 
     .notice{border:1px dashed #eab308;background:#fffbea;color:#854d0e;padding:10px;border-radius:10px}
@@ -165,7 +166,8 @@
               </div>
             </div>
             <p class="notice" style="margin-top:10px">
-              Admin tip: open <b>shop.html#admin</b> (or <b>?admin=1</b>) to show this panel on any device. You can also Export/Import JSON to move your catalog.
+              Admin tip: open <b>shop.html#admin</b> (or <b>?admin=1</b>) to show this panel on any device.
+              After editing, use <b>Export</b> and upload to <code>docs/data/products.json</code> so all devices match.
             </p>
           </div>
         </details>
@@ -190,18 +192,23 @@
   </footer>
 
   <!-- A11y helper -->
-  <style>
-    .visually-hidden{position:absolute!important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap;}
-  </style>
+  <style>.visually-hidden{position:absolute!important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap}</style>
 
-  <!-- Inline script: localStorage products + Admin Mode toggle -->
+  <!-- Inline script: shared catalog (data/products.json) + local admin + uniform cards -->
   <script>
     (function(){
-      const KEY = 'lwg_products';
-      const ADMIN_KEY = 'lwg_admin'; // "1" => admin mode on
+      const KEY = 'lwg_products';     // local product store
+      const ADMIN_KEY = 'lwg_admin';  // "1" => admin mode on
       const CART_KEY = 'lwg_cart';
+      const REMOTE_URL = 'data/products.json'; // shared catalog file in /docs/data/
 
       const $ = (s, el=document)=>el.querySelector(s);
+      const grid = $('#productGrid');
+      const search = $('#searchInput');
+      const catSel = $('#categoryFilter');
+      const previewEl = $('#pPreview');
+      const fileInputEl = $('#pImageFile');
+      const pImageInputEl = $('#pImage');
 
       // helpers
       const escapeHtml = (s='') => String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
@@ -220,44 +227,50 @@
         return h.includes('admin') || q.includes('admin=1');
       }
       setAdmin(localStorage.getItem(ADMIN_KEY) === '1' || adminRequested());
-      window.addEventListener('hashchange', ()=>{ if (adminRequested()) setAdmin(true); });
+      addEventListener('hashchange', ()=>{ if (adminRequested()) setAdmin(true); });
 
       // Desktop key: Alt+Shift+A
-      window.addEventListener('keydown', (e)=>{
+      addEventListener('keydown', (e)=>{
         if (e.altKey && e.shiftKey && (e.key.toLowerCase() === 'a')) {
           e.preventDefault();
           setAdmin(document.body.getAttribute('data-admin') !== 'true');
         }
       });
-      // Mobile gestures: long press or 5 quick taps on the brand
+      // Mobile: long press (700ms) or 5 taps on the brand
       const brand = document.querySelector('.brand');
       if (brand){
         let holdTimer=null;
-        brand.addEventListener('touchstart', ()=> { holdTimer = setTimeout(()=> setAdmin(document.body.getAttribute('data-admin') !== 'true'), 700); });
+        brand.addEventListener('touchstart', ()=>{ holdTimer=setTimeout(()=> setAdmin(document.body.getAttribute('data-admin')!=='true'),700); });
         ['touchend','touchcancel','touchmove'].forEach(ev=> brand.addEventListener(ev, ()=> clearTimeout(holdTimer)));
-        let taps=0, tapTimer=null;
+        let taps=0, tm=null;
         brand.addEventListener('click', ()=>{
           taps++;
-          if (!tapTimer){
-            tapTimer = setTimeout(()=>{
-              if (taps >= 5) setAdmin(document.body.getAttribute('data-admin') !== 'true');
-              taps=0; tapTimer=null;
-            }, 500);
-          }
+          if(!tm){ tm=setTimeout(()=>{ if(taps>=5) setAdmin(document.body.getAttribute('data-admin')!=='true'); taps=0; tm=null; },500); }
         });
       }
 
-      /* -------- Elements -------- */
-      const grid = $('#productGrid');
-      const search = $('#searchInput');
-      const catSel = $('#categoryFilter');
-      const previewEl = $('#pPreview');
-      const fileInputEl = $('#pImageFile');
-      const pImageInputEl = $('#pImage');
+      /* -------- Products storage (local) -------- */
+      const readProducts = ()=>{ try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; } };
+      const writeProducts = (arr)=>{ localStorage.setItem(KEY, JSON.stringify(arr||[])); buildCategories(arr||[]); render(); };
 
-      /* -------- Products storage -------- */
-      function readProducts(){ try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; } }
-      function writeProducts(arr){ localStorage.setItem(KEY, JSON.stringify(arr)); buildCategories(arr); render(); }
+      /* -------- Fetch shared catalog & unify with local -------- */
+      async function fetchRemote(){
+        try{
+          const res = await fetch(REMOTE_URL + '?v=' + Date.now(), {cache:'no-store'});
+          if(!res.ok) throw 0;
+          const json = await res.json();
+          return Array.isArray(json) ? json : [];
+        }catch{ return []; }
+      }
+      async function loadUnified(){
+        const [remote, local] = await Promise.all([fetchRemote(), readProducts()]);
+        // unify by id: local overrides remote
+        const map = new Map();
+        (remote||[]).forEach(p=> map.set(String(p.id), p));
+        (local||[]).forEach(p=> map.set(String(p.id), p));
+        const unified = [...map.values()];
+        writeProducts(unified);
+      }
 
       /* -------- Categories -------- */
       function buildCategories(items){
@@ -275,7 +288,7 @@
         const cat  = catSel?.value || '';
         const admin = document.body.getAttribute('data-admin') === 'true';
 
-        const list = items.filter(p=>{
+        const list = (items||[]).filter(p=>{
           const okTerm = !term || (String(p.title||'').toLowerCase().includes(term) || String(p.description||'').toLowerCase().includes(term));
           const okCat  = !cat  || String(p.category||'') === cat;
           return okTerm && okCat;
@@ -294,7 +307,7 @@
             </div>
             <h3>${escapeHtml(p.title||'')}</h3>
             <div class="muted">${escapeHtml(p.category||'')}</div>
-            <p class="product-desc">${escapeHtml(p.description||'')}</p>
+            ${p.description ? `<p class="product-desc">${escapeHtml(p.description)}</p>` : ''}
             <div class="price">NLe ${money(p.price)}</div>
             <div class="product-actions">
               <button class="btn small" data-action="minus">−</button>
@@ -309,7 +322,7 @@
 
       /* -------- Cart badge -------- */
       const readCart = () => { try { return JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch { return []; } };
-      const writeCart = (items) => { localStorage.setItem(CART_KEY, JSON.stringify(items)); updateBadge(); };
+      const writeCart = (items) => { localStorage.setItem(CART_KEY, JSON.stringify(items||[])); updateBadge(); };
       function updateBadge(){
         const cart = readCart();
         const count = cart.reduce((a,it)=>a + (num(it.qty)||0), 0);
@@ -318,8 +331,8 @@
       }
 
       /* -------- Search / Category -------- */
-      if (search)  search.addEventListener('input', render);
-      if (catSel)  catSel.addEventListener('change', render);
+      search?.addEventListener('input', render);
+      catSel?.addEventListener('change', render);
 
       /* -------- Grid actions -------- */
       grid.addEventListener('click', (e)=>{
@@ -336,7 +349,7 @@
           const qty = Math.max(1, Math.min(Number(product?.stock||9999), parseInt(qtyInput.value||'1')));
           const cart = readCart();
           const ex = cart.find(it=>String(it.id)===String(id));
-          if (ex) ex.qty = (num(ex.qty) + qty); else cart.push({ id, qty });
+          if (ex) ex.qty = (num(ex.qty) + qty); else cart.push({ id, qty, title:product.title, price:product.price, image:product.image });
           writeCart(cart);
           btn.textContent = 'Added ✓'; setTimeout(()=> btn.textContent='Add to Cart', 900);
         }
@@ -352,7 +365,7 @@
       const btnImport= document.getElementById('btnImport');
       const btnClear = document.getElementById('btnClear');
 
-      // Image file -> base64 preview
+      // Image file -> base64 preview (works on phone camera/gallery)
       if (fileInputEl){
         fileInputEl.addEventListener('change', ()=>{
           const f = fileInputEl.files?.[0]; if (!f) return;
@@ -361,7 +374,7 @@
           r.readAsDataURL(f);
         });
       }
-      if (pImageInputEl) pImageInputEl.addEventListener('input', ()=>{ if (previewEl) previewEl.src = pImageInputEl.value; });
+      pImageInputEl?.addEventListener('input', ()=>{ if (previewEl) previewEl.src = pImageInputEl.value; });
 
       if (btnAdd) btnAdd.addEventListener('click', ()=>{
         const p = {
@@ -387,18 +400,18 @@
         if (previewEl) previewEl.removeAttribute('src');
       });
 
-      if (btnReset) btnReset.addEventListener('click', ()=>{
+      btnReset?.addEventListener('click', ()=>{
         ['pId','pTitle','pPrice','pCategory','pImage','pDesc','pStock'].forEach(id=>{ const el = document.getElementById(id); if(el) el.value=''; });
         if (fileInputEl) fileInputEl.value = '';
         if (previewEl) previewEl.removeAttribute('src');
       });
 
-      if (btnExport) btnExport.addEventListener('click', ()=>{
+      btnExport?.addEventListener('click', ()=>{
         const blob = new Blob([JSON.stringify(readProducts(), null, 2)], {type:'application/json'});
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'products.json'; a.click(); URL.revokeObjectURL(a.href);
       });
 
-      if (btnImport) btnImport.addEventListener('click', ()=>{
+      btnImport?.addEventListener('click', ()=>{
         const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'application/json,.json';
         inp.addEventListener('change', async ()=>{
           const f = inp.files?.[0]; if(!f) return;
@@ -411,11 +424,13 @@
         inp.click();
       });
 
-      if (btnClear) btnClear.addEventListener('click', ()=>{ if (confirm('Clear ALL products?')) writeProducts([]); });
+      btnClear?.addEventListener('click', ()=>{ if (confirm('Clear ALL products?')) writeProducts([]); });
 
-      // Boot
+      // Boot: render whatever is local, then unify with shared file
       buildCategories(readProducts());
       render();
+      loadUnified(); // pulls /data/products.json and merges so all devices match
+
       // initial badge sync
       (function initBadge(){
         const cart = readCart();
