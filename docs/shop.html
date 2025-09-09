@@ -7,12 +7,24 @@
   <title>LWG Partners Network — LWG Shop</title>
   <meta name="description" content="Browse products from LWG Partners Network. Quality • Reliability • Impact."/>
   <meta name="theme-color" content="#002F5F"/>
+  <meta name="robots" content="index,follow"/>
+
+  <!-- Canonical (real domain) -->
+  <link rel="canonical" href="https://www.lwgpartnersnetwork.com/shop.html"/>
 
   <!-- Open Graph -->
   <meta property="og:type" content="website">
+  <meta property="og:site_name" content="LWG Partners Network">
   <meta property="og:title" content="LWG Partners Network — LWG Shop">
   <meta property="og:description" content="Shop quality products with reliable delivery.">
-  <meta property="og:image" content="images/logo/blue-logo-512.png">
+  <meta property="og:image" content="https://www.lwgpartnersnetwork.com/images/logo/blue-logo-512.png">
+  <meta property="og:url" content="https://www.lwgpartnersnetwork.com/shop.html">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content="LWG Partners Network — LWG Shop"/>
+  <meta name="twitter:description" content="Shop quality products with reliable delivery."/>
+  <meta name="twitter:image" content="https://www.lwgpartnersnetwork.com/images/logo/blue-logo-512.png"/>
 
   <!-- Icons + CSS -->
   <link rel="icon" href="images/logo/blue-logo-512.png"/>
@@ -195,7 +207,7 @@
       <div class="socials">
         <a href="https://wa.me/23272146015" target="_blank" rel="noopener">WhatsApp</a>
         <a href="mailto:info@lwgpartnersnetwork.com">Email</a>
-        <a href="https://lwgpartnersnetwork.com" target="_blank" rel="noopener">Website</a>
+        <a href="https://www.lwgpartnersnetwork.com" target="_blank" rel="noopener">Website</a>
       </div>
     </div>
   </footer>
@@ -445,6 +457,11 @@
 
       // Boot
       buildCats(readProducts());
+      // Pre-fill search from ?q= for SEO-friendly search links
+      const qparam = new URLSearchParams(location.search).get('q');
+      if (qparam && document.getElementById('searchInput')) {
+        document.getElementById('searchInput').value = qparam;
+      }
       render();
       updateBadge();
     })();

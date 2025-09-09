@@ -127,12 +127,14 @@ document.addEventListener('DOMContentLoaded', () => {
           local[idx] = { ...local[idx], ...payload }; // keep id
           setLocalProducts(local);
           CURRENT_EDIT_ID = null;
-          btnSave.textContent = 'Save Product';
+          if (btnSave) btnSave.textContent = 'Save Product';
         }
       } else {
         // add new
-        const id = (payload.title || 'item').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'')
-                  + '-' + Math.random().toString(36).slice(2,7);
+        const id = (payload.title || 'item')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g,'-')
+          .replace(/(^-|-$)/g,'') + '-' + Math.random().toString(36).slice(2,7);
         local.unshift({ id, ...payload });
         setLocalProducts(local);
       }
@@ -140,6 +142,8 @@ document.addEventListener('DOMContentLoaded', () => {
       form.reset();
       await loadProducts();
       renderAdmin();
+      // let other tabs/pages know
+      window.dispatchEvent(new Event('admin:refresh'));
     });
   }
 
@@ -165,6 +169,8 @@ document.addEventListener('DOMContentLoaded', () => {
       renderShop();
       const cats = Array.from(new Set(PRODUCTS_CACHE.map(p => p.category))).filter(Boolean);
       if (catSel) {
+        // Fresh rebuild in case categories changed after an edit
+        catSel.innerHTML = '<option value="">All Categories</option>';
         cats.forEach(c => {
           const o = document.createElement('option'); o.value = c; o.textContent = c; catSel.appendChild(o);
         });
@@ -172,6 +178,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     catSel?.addEventListener('change', renderShop);
     search?.addEventListener('input', renderShop);
+
+    // If an admin edit happens in another tab, refresh shop grid here
+    window.addEventListener('storage', (e) => {
+      if (e.key === PKEY) { loadProducts().then(renderShop); }
+    });
+    window.addEventListener('admin:refresh', () => { loadProducts().then(renderShop); });
   }
 
   // Cart page
@@ -180,6 +192,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('paymentMethod')?.addEventListener('change', updatePaymentInfo);
     renderCart();
     updatePaymentInfo();
+
+    // keep in sync if cart changes from another tab
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'lwg_cart') renderCart();
+    });
   }
 });
 
@@ -342,9 +359,9 @@ function renderShop() {
   const filtered = PRODUCTS_CACHE.filter(
     (p) =>
       (!cat || p.category === cat) &&
-      (p.title.toLowerCase().includes(q) ||
-        (p.category || '').toLowerCase().includes(q) ||
-        (p.description || '').toLowerCase().includes(q))
+      (String(p.title||'').toLowerCase().includes(q) ||
+        String(p.category || '').toLowerCase().includes(q) ||
+        String(p.description || '').toLowerCase().includes(q))
   );
 
   grid.innerHTML = '';

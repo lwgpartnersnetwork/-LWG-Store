@@ -10,7 +10,7 @@
   <meta name="theme-color" content="#002F5F"/>
   <meta name="robots" content="index,follow"/>
 
-  <!-- Canonical (use your real domain, not GitHub pages) -->
+  <!-- Canonical (use your live domain) -->
   <link rel="canonical" href="https://www.lwgpartnersnetwork.com/index.html"/>
 
   <!-- Social / Open Graph -->
@@ -20,6 +20,7 @@
   <meta property="og:description" content="From Sierra Leone to the World. Quality • Reliability • Impact."/>
   <meta property="og:image" content="https://www.lwgpartnersnetwork.com/images/logo/blue-logo-512.png"/>
   <meta property="og:url" content="https://www.lwgpartnersnetwork.com/index.html"/>
+  <meta property="og:locale" content="en_US"/>
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image"/>
@@ -40,7 +41,7 @@
   <!-- Core helpers (cart store, badge, mobile nav) -->
   <script defer src="js/app.js"></script>
 
-  <!-- Structured data (Organization + Website) -->
+  <!-- Structured data (Organization) -->
   <script type="application/ld+json">
   {
     "@context":"https://schema.org",
@@ -55,10 +56,13 @@
       "@type": "ContactPoint",
       "contactType": "customer support",
       "telephone": "+23272146015",
-      "areaServed": "SL"
+      "areaServed": "SL",
+      "availableLanguage": ["en"]
     }]
   }
   </script>
+
+  <!-- Structured data (Website + search) -->
   <script type="application/ld+json">
   {
     "@context":"https://schema.org",
@@ -167,7 +171,7 @@
     </div>
   </footer>
 
-  <!-- Minimal helper style for the skip link (kept inline to avoid extra file) -->
+  <!-- Minimal helper style for the skip link -->
   <style>
     .visually-hidden-focusable:active,
     .visually-hidden-focusable:focus{
