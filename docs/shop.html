@@ -1,58 +1,18 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <!-- Base meta -->
+  <!-- Meta -->
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>LWG Partners Network — LWG Shop</title>
-  <meta name="description" content="Shop quality fashion, electronics, and essentials in Sierra Leone. Fast delivery, secure payment, and reliable service from LWG Partners Network."/>
+  <meta name="description" content="Browse products from LWG Partners Network. Quality • Reliability • Impact."/>
   <meta name="theme-color" content="#002F5F"/>
-  <meta name="robots" content="index,follow" />
-  <link rel="canonical" href="https://www.lwgpartnersnetwork.com/shop.html"/>
 
   <!-- Open Graph -->
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="LWG Partners Network">
-  <meta property="og:title" content="LWG Shop — LWG Partners Network">
-  <meta property="og:description" content="Shop quality fashion, electronics, and essentials in Sierra Leone. Fast delivery and secure payment."/>
-  <meta property="og:url" content="https://www.lwgpartnersnetwork.com/shop.html">
-  <meta property="og:image" content="https://www.lwgpartnersnetwork.com/images/logo/blue-logo-512.png">
-
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="LWG Shop — LWG Partners Network">
-  <meta name="twitter:description" content="Shop quality fashion, electronics, and essentials in Sierra Leone. Fast delivery and secure payment.">
-  <meta name="twitter:image" content="https://www.lwgpartnersnetwork.com/images/logo/blue-logo-512.png">
-
-  <!-- JSON-LD: Organization + Website -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "name": "LWG Partners Network",
-    "url": "https://www.lwgpartnersnetwork.com/",
-    "logo": "https://www.lwgpartnersnetwork.com/images/logo/blue-logo-512.png",
-    "contactPoint": [{
-      "@type": "ContactPoint",
-      "contactType": "customer support",
-      "telephone": "+23272146015",
-      "areaServed": "SL"
-    }]
-  }
-  </script>
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "name": "LWG Partners Network",
-    "url": "https://www.lwgpartnersnetwork.com/",
-    "potentialAction": {
-      "@type": "SearchAction",
-      "target": "https://www.lwgpartnersnetwork.com/shop.html?q={search_term_string}",
-      "query-input": "required name=search_term_string"
-    }
-  }
-  </script>
+  <meta property="og:title" content="LWG Partners Network — LWG Shop">
+  <meta property="og:description" content="Shop quality products with reliable delivery.">
+  <meta property="og:image" content="images/logo/blue-logo-512.png">
 
   <!-- Icons + CSS -->
   <link rel="icon" href="images/logo/blue-logo-512.png"/>
@@ -194,11 +154,11 @@
           <button id="btnClear" class="btn">Clear all products</button>
         </div>
 
-        <details class="add-panel">
+        <details class="add-panel" id="adminPanel">
           <summary>➕ Add a Product</summary>
           <div style="margin-top:10px">
             <div class="form-grid">
-              <!-- ID REMOVED: we auto-generate -->
+              <!-- ID is auto-managed; no field -->
               <label>Title
                 <input id="pTitle" placeholder="Product title"/>
               </label>
@@ -226,9 +186,10 @@
               <label>Stock
                 <input id="pStock" type="number" min="0" step="1" placeholder="50"/>
               </label>
-              <div class="span-2" style="display:flex; gap:8px; flex-wrap:wrap">
+              <div class="span-2" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center">
                 <button id="btnAdd" class="btn" style="background:#002F5F;color:#fff;border-color:#002F5F">Add Product</button>
-                <button id="btnReset" class="btn">Reset</button>
+                <button id="btnReset" class="btn" type="button">Reset</button>
+                <a id="btnCancelEdit" href="#" class="small muted" style="display:none">Cancel edit</a>
               </div>
             </div>
             <p class="notice" style="margin-top:10px">
@@ -256,7 +217,7 @@
     </div>
   </footer>
 
-  <!-- Inline script: localStorage products + Admin Mode + aligned rendering -->
+  <!-- Inline script: localStorage products + Admin Mode + aligned rendering + EDIT -->
   <script>
     (function(){
       const KEY = 'lwg_products';
@@ -304,7 +265,51 @@
         if (cats.includes(keep)) catSel.value = keep;
       }
 
-      // ----- Render aligned cards
+      // ----- EDIT state
+      let editingId = null;
+      const adminPanel = $('#adminPanel');
+      const btnAdd = $('#btnAdd');
+      const btnReset = $('#btnReset');
+      const btnCancelEdit = $('#btnCancelEdit');
+      const fileInputEl = $('#pImageFile');
+      const imgUrlEl    = $('#pImage');
+      const previewEl   = $('#pPreview');
+
+      function fillForm(p){
+        $('#pTitle').value = p.title || '';
+        $('#pPrice').value = (p.price ?? '');
+        $('#pCategory').value = p.category || '';
+        $('#pImage').value = p.image || '';
+        $('#pDesc').value = p.description || '';
+        $('#pStock').value = (p.stock ?? '');
+        if (previewEl) previewEl.src = p.image || '';
+      }
+
+      function clearForm(){
+        ['pTitle','pPrice','pCategory','pImage','pDesc','pStock'].forEach(id=>{ const el=$('#'+id); if(el) el.value=''; });
+        if (fileInputEl) fileInputEl.value='';
+        if (previewEl) previewEl.removeAttribute('src');
+      }
+
+      function enterEdit(p){
+        editingId = p.id;
+        fillForm(p);
+        btnAdd.textContent = 'Save Changes';
+        btnCancelEdit.style.display = 'inline';
+        if (adminPanel) adminPanel.open = true; // open the <details>
+        // update summary text to hint editing
+        adminPanel?.querySelector('summary')?.replaceChildren(document.createTextNode('✏️ Edit Product'));
+      }
+
+      function exitEdit(){
+        editingId = null;
+        clearForm();
+        btnAdd.textContent = 'Add Product';
+        btnCancelEdit.style.display = 'none';
+        adminPanel?.querySelector('summary')?.replaceChildren(document.createTextNode('➕ Add a Product'));
+      }
+
+      // ----- Render aligned cards (+admin Edit/Delete)
       function render(){
         const items = readProducts();
         const term = (search?.value||'').toLowerCase();
@@ -338,6 +343,7 @@
                 <input class="qty-input" type="number" value="1" min="1" max="${num(p.stock||0)||9999}"/>
                 <button class="btn icon" data-action="plus" aria-label="increase">+</button>
                 <button class="btn primary" data-action="add">Add to Cart</button>
+                ${admin ? '<button class="btn" data-action="edit" title="Edit product">Edit</button>' : ''}
                 ${admin ? '<button class="btn danger" data-action="del" title="Remove product">Delete</button>' : ''}
               </div>
             </div>
@@ -358,10 +364,10 @@
       search?.addEventListener('input', render);
       catSel?.addEventListener('change', render);
 
-      // ----- Grid actions (qty, add, delete)
+      // ----- Grid actions (qty, add, edit, delete)
       grid.addEventListener('click', (e)=>{
         const btn = e.target.closest('button'); if(!btn) return;
-        const card = btn.closest('.product-card'); if(!card) return;
+        const card = btn.closest('article.product-card'); if(!card) return;
         const id = card.dataset.id;
         const items = readProducts();
         const product = items.find(p=>String(p.id)===String(id));
@@ -380,22 +386,20 @@
           btn.textContent = 'Added ✓'; setTimeout(()=> btn.textContent='Add to Cart', 900);
         }
 
+        if (btn.dataset.action === 'edit'){
+          enterEdit(product);
+          window.scrollTo({ top: document.getElementById('adminPanel').offsetTop - 20, behavior: 'smooth' });
+        }
+
         if (btn.dataset.action === 'del'){
           writeProducts(items.filter(p=>String(p.id)!==String(id)));
+          // If we were editing this item, cancel edit
+          if (editingId === id) exitEdit();
         }
       });
 
-      // ----- ADMIN wires
-      const btnAdd   = $('#btnAdd');
-      const btnReset = $('#btnReset');
-      const btnExport= $('#btnExport');
-      const btnImport= $('#btnImport');
-      const btnClear = $('#btnClear');
-      const fileInputEl = $('#pImageFile');
-      const imgUrlEl    = $('#pImage');
-      const previewEl   = $('#pPreview');
-
-      // Image file -> base64
+      // ----- ADMIN: add/save/reset/export/import/clear/cancel-edit
+      // Image file -> base64 preview
       fileInputEl?.addEventListener('change', ()=>{
         const f = fileInputEl.files?.[0]; if(!f) return;
         const r = new FileReader();
@@ -404,9 +408,9 @@
       });
       imgUrlEl?.addEventListener('input', ()=>{ if(previewEl) previewEl.src = imgUrlEl.value; });
 
-      btnAdd?.addEventListener('click', ()=>{
+      btnAdd?.addEventListener('click', (ev)=>{
+        ev.preventDefault();
         const p = {
-          id: genId($('#pTitle').value || ''),
           title: ($('#pTitle').value||'').trim(),
           price: num($('#pPrice').value),
           category: ($('#pCategory').value||'').trim(),
@@ -415,29 +419,37 @@
           stock: num($('#pStock').value)
         };
         if (!p.title){ alert('Title is required.'); return; }
-        if (!p.id || p.id==='-') p.id = genId(p.title);
 
         const items = readProducts();
-        items.push(p);
-        writeProducts(items);
 
-        ['pTitle','pPrice','pCategory','pImage','pDesc','pStock'].forEach(id=>{ const el=$('#'+id); if(el) el.value=''; });
-        if (fileInputEl) fileInputEl.value='';
-        if (previewEl) previewEl.removeAttribute('src');
+        if (editingId){
+          // update existing
+          const idx = items.findIndex(x=>String(x.id)===String(editingId));
+          if (idx>-1){
+            items[idx] = { ...items[idx], ...p }; // keep same id
+            writeProducts(items);
+            exitEdit();
+          } else {
+            alert('Item not found.'); exitEdit();
+          }
+        } else {
+          // add new
+          const id = genId(p.title);
+          items.push({ id, ...p });
+          writeProducts(items);
+          clearForm();
+        }
       });
 
-      btnReset?.addEventListener('click', ()=>{
-        ['pTitle','pPrice','pCategory','pImage','pDesc','pStock'].forEach(id=>{ const el=$('#'+id); if(el) el.value=''; });
-        if (fileInputEl) fileInputEl.value='';
-        if (previewEl) previewEl.removeAttribute('src');
-      });
+      btnReset?.addEventListener('click', (e)=>{ e.preventDefault(); clearForm(); });
+      btnCancelEdit?.addEventListener('click', (e)=>{ e.preventDefault(); exitEdit(); });
 
-      btnExport?.addEventListener('click', ()=>{
+      $('#btnExport')?.addEventListener('click', ()=>{
         const blob = new Blob([JSON.stringify(readProducts(), null, 2)], {type:'application/json'});
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'products.json'; a.click(); URL.revokeObjectURL(a.href);
       });
 
-      btnImport?.addEventListener('click', ()=>{
+      $('#btnImport')?.addEventListener('click', ()=>{
         const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'application/json,.json';
         inp.addEventListener('change', async ()=>{
           const f = inp.files?.[0]; if(!f) return;
@@ -447,17 +459,22 @@
             // Ensure any missing ids are generated
             const fixed = arr.map(x => ({...x, id: x.id || genId(x.title||'product')}));
             writeProducts(fixed);
+            exitEdit();
           } catch { alert('Invalid JSON file.'); }
         });
         inp.click();
       });
 
-      btnClear?.addEventListener('click', ()=>{ if (confirm('Clear ALL products?')) writeProducts([]); });
+      $('#btnClear')?.addEventListener('click', ()=>{ if (confirm('Clear ALL products?')) { writeProducts([]); exitEdit(); } });
 
       // Boot
       buildCats(readProducts());
       render();
-      updateBadge();
+      (function updateBadgeInit(){
+        const bd = $('#cartBadge'); if(!bd) return;
+        const count = (JSON.parse(localStorage.getItem(CART_KEY)||'[]')||[]).reduce((a,it)=>a + (num(it.qty)||0), 0);
+        bd.textContent = String(count);
+      })();
     })();
   </script>
 </body>

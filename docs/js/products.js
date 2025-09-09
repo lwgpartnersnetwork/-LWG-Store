@@ -1,9 +1,9 @@
 /* =========================================================
-   LWG Store — products.js (NO BACKEND / LOCAL ONLY)
+   LWG Store — products.js (LOCAL ONLY) with EDIT support
    - Products in localStorage (seeded on first run)
+   - Admin list (Edit/Delete) + form (Save/Add)
    - Shop render + Cart render
    - WhatsApp checkout with full, readable receipt
-   - Adds "Send me a copy" for customer receipt
    ========================================================= */
 
 /* ========= PAYMENT META ========= */
@@ -93,15 +93,18 @@ const setLocalProducts = (arr) => localStorage.setItem(PKEY, JSON.stringify(arr 
 
 /* ========= Simple product cache ========= */
 let PRODUCTS_CACHE = [];
+let CURRENT_EDIT_ID = null; // <-- EDIT state
 
 /* ========= DOM Ready ========= */
 document.addEventListener('DOMContentLoaded', () => {
-  // Admin page (legacy admin.html support)
+  // Admin page
   const form = document.getElementById('productForm');
   const list = document.getElementById('adminList');
   const clearBtn = document.getElementById('clearProducts');
 
   if (form) {
+    const btnSave = form.querySelector('button[type="submit"]');
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(form);
@@ -113,17 +116,33 @@ document.addEventListener('DOMContentLoaded', () => {
         image: (fd.get('image') || '').trim(),
         description: (fd.get('description') || '').trim()
       };
-      if (!payload.title) return alert('Title is required.');
+      if (!payload.title) { alert('Title is required.'); return; }
 
       const local = getLocalProducts();
-      local.unshift({ id: 'L' + Date.now(), ...payload });
-      setLocalProducts(local);
+
+      if (CURRENT_EDIT_ID) {
+        // update existing
+        const idx = local.findIndex(x => String(x.id) === String(CURRENT_EDIT_ID));
+        if (idx > -1) {
+          local[idx] = { ...local[idx], ...payload }; // keep id
+          setLocalProducts(local);
+          CURRENT_EDIT_ID = null;
+          btnSave.textContent = 'Save Product';
+        }
+      } else {
+        // add new
+        const id = (payload.title || 'item').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'')
+                  + '-' + Math.random().toString(36).slice(2,7);
+        local.unshift({ id, ...payload });
+        setLocalProducts(local);
+      }
 
       form.reset();
       await loadProducts();
       renderAdmin();
     });
   }
+
   if (clearBtn) {
     clearBtn.addEventListener('click', async () => {
       if (confirm('Delete ALL local products?')) {
@@ -133,6 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
   if (list) loadProducts().then(renderAdmin);
 
   // Shop page
@@ -173,6 +193,74 @@ async function loadProducts() {
     PRODUCTS_CACHE = seedLocalIfEmpty();
     return PRODUCTS_CACHE;
   }
+}
+
+/* ========= Admin render (now with Edit) ========= */
+function renderAdmin() {
+  const list = document.getElementById('adminList');
+  const form = document.getElementById('productForm');
+  if (!list) return;
+
+  const btnSave = form?.querySelector('button[type="submit"]');
+  list.innerHTML = '';
+  PRODUCTS_CACHE.forEach((p) => {
+    const el = document.createElement('div');
+    el.className = 'admin-item';
+    el.innerHTML = `
+      <div class="row">
+        <strong>${p.title}</strong>
+        <span>NLe ${(+p.price || 0).toFixed(2)}</span>
+      </div>
+      <div class="row small muted">
+        <span>${p.category || 'General'}</span>
+        <span>Stock: ${(+p.stock || 0)}</span>
+      </div>
+      <img src="${p.image || ''}" alt="" onerror="this.style.display='none'"/>
+      <div class="actions">
+        <button class="btn" data-edit="${p.id}">Edit</button>
+        <button class="btn danger" data-del="${p.id}">Delete</button>
+      </div>`;
+    list.appendChild(el);
+  });
+
+  // delete
+  list.querySelectorAll('button[data-del]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-del');
+      setLocalProducts(getLocalProducts().filter((x) => String(x.id) !== String(id)));
+      await loadProducts();
+      renderAdmin();
+      if (window.Swal) Swal.fire({ icon:'success', title:'Deleted', timer:900, showConfirmButton:false });
+      // if we were editing this item, reset state
+      if (CURRENT_EDIT_ID === id) {
+        CURRENT_EDIT_ID = null;
+        if (btnSave) btnSave.textContent = 'Save Product';
+        form?.reset();
+      }
+    });
+  });
+
+  // edit
+  list.querySelectorAll('button[data-edit]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-edit');
+      const p = PRODUCTS_CACHE.find(x => String(x.id) === String(id));
+      if (!p || !form) return;
+
+      CURRENT_EDIT_ID = id;
+      form.querySelector('input[name="title"]').value = p.title || '';
+      form.querySelector('input[name="category"]').value = p.category || '';
+      form.querySelector('input[name="price"]').value = (p.price ?? '');
+      form.querySelector('input[name="stock"]').value = (p.stock ?? '');
+      form.querySelector('input[name="image"]').value = p.image || '';
+      form.querySelector('textarea[name="description"]').value = p.description || '';
+      if (btnSave) btnSave.textContent = 'Save Changes';
+
+      // focus the form nicely
+      form.scrollIntoView({ behavior:'smooth', block:'start' });
+      form.querySelector('input[name="title"]').focus();
+    });
+  });
 }
 
 /* ========= Cart helpers (uses app.js window.__lwg) ========= */
@@ -236,55 +324,13 @@ function updatePaymentInfo() {
   }
   const meta = PAYMENT_METHODS[key];
 
-  // preserve newlines for readability
+  // Show newlines nicely
   box.style.display = 'block';
   box.style.whiteSpace = 'pre-wrap';
   box.innerText = `${meta.label}\n${meta.info}`;
 }
 
-function getPaymentMeta() {
-  const sel = document.getElementById('paymentMethod');
-  if (!sel || !sel.value) return { label: '', info: '' };
-  const key = sel.value;
-  return PAYMENT_METHODS[key] || { label: '', info: '' };
-}
-
-/* ========= Renderers ========= */
-function renderAdmin() {
-  const list = document.getElementById('adminList');
-  if (!list) return;
-
-  list.innerHTML = '';
-  PRODUCTS_CACHE.forEach((p) => {
-    const el = document.createElement('div');
-    el.className = 'admin-item';
-    el.innerHTML = `
-      <div class="row">
-        <strong>${p.title}</strong>
-        <span>NLe ${(+p.price || 0).toFixed(2)}</span>
-      </div>
-      <div class="row small muted">
-        <span>${p.category || 'General'}</span>
-        <span>Stock: ${(+p.stock || 0)}</span>
-      </div>
-      <img src="${p.image || ''}" alt="" onerror="this.style.display='none'"/>
-      <div class="actions">
-        <button class="btn danger" data-del="${p.id}">Delete</button>
-      </div>`;
-    list.appendChild(el);
-  });
-
-  list.querySelectorAll('button[data-del]').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const id = btn.getAttribute('data-del');
-      setLocalProducts(getLocalProducts().filter((x) => String(x.id) !== String(id)));
-      await loadProducts();
-      renderAdmin();
-      if (window.Swal) Swal.fire({ icon:'success', title:'Deleted', timer:900, showConfirmButton:false });
-    });
-  });
-}
-
+/* ========= Shop render ========= */
 function renderShop() {
   const grid = document.getElementById('productGrid');
   if (!grid) return;
@@ -325,6 +371,7 @@ function renderShop() {
   }
 }
 
+/* ========= Cart render ========= */
 function renderCart() {
   const container = document.getElementById('cartItems');
   if (!container) return;
@@ -373,13 +420,12 @@ function renderCart() {
     b.addEventListener('click', () => removeItem(b.getAttribute('data-remove')));
   });
 
-  // Checkout via WhatsApp (no server save) + "Send me a copy"
+  // Checkout via WhatsApp (no server save)
   const checkoutBtn = document.getElementById('checkoutBtn');
   if (checkoutBtn) {
     checkoutBtn.textContent = 'Checkout via WhatsApp';
     checkoutBtn.onclick = async () => {
-      const liveCart = api.readCart(); // re-read to be safe
-      if (!liveCart.length) return alert('Your cart is empty.');
+      if (!cart.length) return alert('Your cart is empty.');
 
       const name = (document.getElementById('custName')?.value || '').trim();
       const address = (document.getElementById('custAddress')?.value || '').trim();
@@ -387,66 +433,40 @@ function renderCart() {
       const locationLabel = getDeliveryLocationLabel() || 'Not selected';
       const payment = getPaymentMeta();
 
-      if (!name || !phone || !address || !locationLabel || !payment.label) {
-        alert('Please fill all delivery and payment fields.');
-        return;
-      }
-
-      // Recalculate totals at click-time
-      let sub = 0;
-      const lines = liveCart.map((i, idx) => {
-        const price = Number(i.price) || 0;
-        const qty = Number(i.qty) || 0;
-        const lineTotal = price * qty;
-        sub += lineTotal;
-        return `${idx + 1}. ${i.title}  |  Qty: ${qty}  |  @ NLe ${price.toFixed(2)}  |  Line: NLe ${lineTotal.toFixed(2)}`;
-      });
-      const feeNow = getDeliveryFee();
-      const grandNow = sub + feeNow;
-
       const now = new Date();
       const pad = (n) => String(n).padStart(2, '0');
       const orderId = `LWG-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+
+      const lines = cart.map((i, idx) => {
+        const price = Number(i.price) || 0;
+        const qty = Number(i.qty) || 0;
+        const lineTotal = price * qty;
+        return `${idx + 1}. ${i.title}  |  Qty: ${qty}  |  @ NLe ${price.toFixed(2)}  |  Line: NLe ${lineTotal.toFixed(2)}`;
+      });
 
       const message =
 `NEW ORDER — ${orderId}
 Items:
 ${lines.join('\n')}
 
-Subtotal: NLe ${sub.toFixed(2)}
-Delivery (${locationLabel}): NLe ${feeNow.toFixed(2)}
-Grand Total: NLe ${grandNow.toFixed(2)}
+Subtotal: NLe ${subtotal.toFixed(2)}
+Delivery (${locationLabel}): NLe ${fee.toFixed(2)}
+Grand Total: NLe ${(subtotal + fee).toFixed(2)}
 
-Customer: ${name} | ${phone}
-Address: ${address}
+Customer: ${name || '—'} | ${phone || '—'}
+Address: ${address || '—'}
 
-Payment: ${payment.label}
+Payment: ${payment.label || '—'}
 ${payment.info ? 'Payment Details:\n' + payment.info + '\n' : ''}Source: ${location.href}`;
 
-      // 1) Open business chat (you receive the order)
       window.open(
         `https://wa.me/23272146015?text=${encodeURIComponent(message)}`,
         '_blank',
         'noopener'
       );
 
-      // 2) Offer "Send me a copy" to the customer
-      const cta = document.querySelector('.cta');
-      const digits = phone.replace(/\D/g,'');
-      if (cta && !document.getElementById('copyToSelf') && digits.length >= 8) {
-        const copyA = document.createElement('a');
-        copyA.id = 'copyToSelf';
-        copyA.className = 'btn ghost';
-        copyA.target = '_blank';
-        copyA.rel = 'noopener';
-        copyA.href = `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
-        copyA.textContent = 'Send me a copy';
-        copyA.style.marginLeft = '8px';
-        cta.appendChild(copyA);
-      }
-
-      // Empty cart after sending & refresh
-      api.writeCart([]);
+      // Empty cart after sending
+      window.__lwg.writeCart([]);
       setTimeout(() => location.reload(), 1200);
     };
   }
