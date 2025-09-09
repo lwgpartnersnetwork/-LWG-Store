@@ -4,15 +4,27 @@
   <!-- Meta -->
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>LWG Partners Network — Cart</title>
-  <meta name="description" content="Your cart on LWG Partners Network"/>
+  <title>Cart — LWG Partners Network</title>
+  <meta name="description" content="Review your items and checkout via WhatsApp on LWG Partners Network."/>
   <meta name="theme-color" content="#002F5F"/>
+  <meta name="robots" content="index,follow"/>
+
+  <!-- Canonical (use your real domain) -->
+  <link rel="canonical" href="https://www.lwgpartnersnetwork.com/cart.html"/>
 
   <!-- Social preview -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="LWG Partners Network">
   <meta property="og:title" content="Your Cart — LWG Partners Network">
   <meta property="og:description" content="Review your items and checkout via WhatsApp.">
-  <meta property="og:type" content="website">
-  <meta property="og:image" content="images/logo/blue-logo-512.png">
+  <meta property="og:image" content="https://www.lwgpartnersnetwork.com/images/logo/blue-logo-512.png">
+  <meta property="og:url" content="https://www.lwgpartnersnetwork.com/cart.html">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content="Your Cart — LWG Partners Network"/>
+  <meta name="twitter:description" content="Review your items and checkout via WhatsApp."/>
+  <meta name="twitter:image" content="https://www.lwgpartnersnetwork.com/images/logo/blue-logo-512.png"/>
 
   <!-- Icons -->
   <link rel="icon" href="images/logo/blue-favicon-64.png" sizes="64x64">
@@ -122,7 +134,7 @@
       <div class="cta">
         <a href="shop.html" class="btn ghost">Continue Shopping</a>
         <button id="checkoutBtn" class="btn primary">Checkout via WhatsApp</button>
-        <!-- We'll add the "Send me a copy" button here dynamically -->
+        <!-- "Send me a copy" button will be inserted here after checkout -->
       </div>
     </section>
   </main>
@@ -134,7 +146,7 @@
       <div class="socials">
         <a href="https://wa.me/23272146015" target="_blank" rel="noopener">WhatsApp</a>
         <a href="mailto:info@lwgpartnersnetwork.com">Email</a>
-        <a href="https://lwgpartnersnetwork.com" target="_blank" rel="noopener">Website</a>
+        <a href="https://www.lwgpartnersnetwork.com" target="_blank" rel="noopener">Website</a>
       </div>
     </div>
   </footer>
@@ -202,13 +214,13 @@
               </div>
               <div>Price: NLe ${money(it.price)}</div>
               <div class="qty" style="display:flex;gap:6px;align-items:center;">
-                <button class="btn ghost" data-action="dec">−</button>
-                <input class="qty-input" type="number" min="1" value="${it.qty}" style="width:70px;text-align:center"/>
-                <button class="btn ghost" data-action="inc">+</button>
+                <button class="btn ghost" data-action="dec" aria-label="Decrease quantity">−</button>
+                <input class="qty-input" type="number" min="1" value="${it.qty}" style="width:70px;text-align:center" aria-label="Quantity"/>
+                <button class="btn ghost" data-action="inc" aria-label="Increase quantity">+</button>
               </div>
               <div style="display:flex;gap:8px;align-items:center;">
                 <div>Line: <b>NLe ${money(it.line)}</b></div>
-                <button class="btn" title="Remove" data-action="remove">✕</button>
+                <button class="btn" title="Remove" data-action="remove" aria-label="Remove item">✕</button>
               </div>
             </div>`).join('');
         }
@@ -278,6 +290,16 @@
         else { payInfo.style.display='none'; payInfo.textContent=''; }
       });
 
+      // Normalize a phone into an international WhatsApp number (SL defaults)
+      function normalizeMsisdn(raw){
+        const d = String(raw||'').replace(/\D/g,'');
+        if (!d) return '';
+        if (d.startsWith('232') && d.length === 11) return d;          // already +232 XXXXXXXX
+        if (d.startsWith('0') && d.length === 10) return '232' + d.slice(1); // 0XXXXXXXX → 232XXXXXXXX
+        if (d.length === 8) return '232' + d;                           // XXXXXXXX → 232XXXXXXXX
+        return d; // fallback (user may have full intl already)
+      }
+
       // Checkout (WhatsApp) — opens business chat, shows "Send me a copy", then clears cart
       checkoutBtn.addEventListener('click', () => {
         const name = document.getElementById('custName').value.trim();
@@ -294,7 +316,7 @@
 
         const sub   = rows.reduce((a, r) => a + num(r.line), 0);
         const total = sub + fee;
-        const lines = rows.map((x,i) => `• ${x.title} × ${x.qty} — NLe ${money(x.line)}`).join('\n');
+        const lines = rows.map((x) => `• ${x.title} × ${x.qty} — NLe ${money(x.line)}`).join('\n');
 
         const msg = [
           'NEW ORDER',
@@ -320,14 +342,14 @@
         // 2) Add "Send me a copy" button for the customer
         const cta = document.querySelector('.cta');
         if (cta && !document.getElementById('copyToSelf')) {
-          const digits = phone.replace(/\D/g,'');
-          if (digits.length >= 8) {
+          const normalized = normalizeMsisdn(phone);
+          if (normalized.length >= 11) {
             const copyA = document.createElement('a');
             copyA.id = 'copyToSelf';
             copyA.className = 'btn ghost';
             copyA.target = '_blank';
             copyA.rel = 'noopener';
-            copyA.href = `https://wa.me/${digits}?text=${encodeURIComponent(msg)}`;
+            copyA.href = `https://wa.me/${normalized}?text=${encodeURIComponent(msg)}`;
             copyA.textContent = 'Send me a copy';
             copyA.style.marginLeft = '8px';
             cta.appendChild(copyA);
@@ -342,7 +364,6 @@
 
       // Initial draw + initialize payment box state
       render();
-      // trigger payment info refresh if a value is preselected
       paySel.dispatchEvent(new Event('change'));
     })();
   </script>

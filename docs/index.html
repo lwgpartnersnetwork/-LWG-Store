@@ -8,23 +8,30 @@
   <title>LWG Partners Network — Home</title>
   <meta name="description" content="LWG Partners Network — Quality • Reliability • Impact. Shop quality products with reliable delivery and community-focused service."/>
   <meta name="theme-color" content="#002F5F"/>
+  <meta name="robots" content="index,follow"/>
 
-  <!-- Canonical & basic SEO -->
-  <link rel="canonical" href="https://lwgpartnersnetwork.github.io/-LWG-Store/docs/index.html"/>
+  <!-- Canonical (use your real domain, not GitHub pages) -->
+  <link rel="canonical" href="https://www.lwgpartnersnetwork.com/index.html"/>
 
   <!-- Social / Open Graph -->
   <meta property="og:type" content="website"/>
+  <meta property="og:site_name" content="LWG Partners Network"/>
   <meta property="og:title" content="LWG Partners Network — Home"/>
   <meta property="og:description" content="From Sierra Leone to the World. Quality • Reliability • Impact."/>
-  <meta property="og:image" content="images/logo/blue-logo-512.png"/>
-  <meta property="og:url" content="https://lwgpartnersnetwork.github.io/-LWG-Store/docs/index.html"/>
+  <meta property="og:image" content="https://www.lwgpartnersnetwork.com/images/logo/blue-logo-512.png"/>
+  <meta property="og:url" content="https://www.lwgpartnersnetwork.com/index.html"/>
+
+  <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content="LWG Partners Network — Home"/>
+  <meta name="twitter:description" content="From Sierra Leone to the World. Quality • Reliability • Impact."/>
+  <meta name="twitter:image" content="https://www.lwgpartnersnetwork.com/images/logo/blue-logo-512.png"/>
 
   <!-- Icons -->
   <link rel="icon" href="images/logo/blue-logo-512.png"/>
   <link rel="apple-touch-icon" href="images/logo/blue-logo-512.png"/>
 
-  <!-- Performance hints (all local/static) -->
+  <!-- Performance hints -->
   <link rel="prefetch" href="shop.html" as="document"/>
 
   <!-- Styles -->
@@ -33,17 +40,36 @@
   <!-- Core helpers (cart store, badge, mobile nav) -->
   <script defer src="js/app.js"></script>
 
-  <!-- Structured data (Organization) -->
+  <!-- Structured data (Organization + Website) -->
   <script type="application/ld+json">
   {
     "@context":"https://schema.org",
     "@type":"Organization",
     "name":"LWG Partners Network",
-    "url":"https://lwgpartnersnetwork.com",
-    "logo":"https://lwgpartnersnetwork.github.io/-LWG-Store/docs/images/lwg-logo-blue.png",
+    "url":"https://www.lwgpartnersnetwork.com/",
+    "logo":"https://www.lwgpartnersnetwork.com/images/logo/blue-logo-512.png",
     "sameAs":[
       "https://wa.me/23272146015"
-    ]
+    ],
+    "contactPoint": [{
+      "@type": "ContactPoint",
+      "contactType": "customer support",
+      "telephone": "+23272146015",
+      "areaServed": "SL"
+    }]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"WebSite",
+    "name":"LWG Partners Network",
+    "url":"https://www.lwgpartnersnetwork.com/",
+    "potentialAction":{
+      "@type":"SearchAction",
+      "target":"https://www.lwgpartnersnetwork.com/shop.html?q={search_term_string}",
+      "query-input":"required name=search_term_string"
+    }
   }
   </script>
 </head>
@@ -136,15 +162,17 @@
       <div class="socials" aria-label="Social links">
         <a href="https://wa.me/23272146015" target="_blank" rel="noopener">WhatsApp</a>
         <a href="mailto:info@lwgpartnersnetwork.com">Email</a>
-        <a href="https://lwgpartnersnetwork.com" target="_blank" rel="noopener">Website</a>
+        <a href="https://www.lwgpartnersnetwork.com" target="_blank" rel="noopener">Website</a>
       </div>
     </div>
   </footer>
 
   <!-- Minimal helper style for the skip link (kept inline to avoid extra file) -->
   <style>
-    .visually-hidden-focusable:active, .visually-hidden-focusable:focus {
-      position: static !important; width:auto;height:auto;clip:auto;padding:8px 12px;
+    .visually-hidden-focusable:active,
+    .visually-hidden-focusable:focus{
+      position: static !important;
+      width:auto;height:auto;clip:auto;padding:8px 12px;
       background:#002F5F;color:#fff;border-radius:6px;z-index:9999;
     }
   </style>

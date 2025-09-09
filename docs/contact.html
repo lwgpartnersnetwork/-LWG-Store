@@ -7,28 +7,48 @@
 
   <title>Contact — LWG Partners Network</title>
   <meta name="description" content="Get in touch with LWG Partners Network. WhatsApp, phone, email, and social links. Quality • Reliability • Impact."/>
+  <meta name="theme-color" content="#002F5F"/>
+  <meta name="robots" content="index,follow"/>
 
-  <!-- Icons -->
-  <link rel="icon" href="images/logo/blue-logo-512.png"/>
+  <!-- Canonical (use your real domain) -->
+  <link rel="canonical" href="https://www.lwgpartnersnetwork.com/contact.html"/>
 
   <!-- Social / Open Graph -->
   <meta property="og:type" content="website"/>
+  <meta property="og:site_name" content="LWG Partners Network"/>
   <meta property="og:title" content="Contact — LWG Partners Network"/>
   <meta property="og:description" content="Reach us via WhatsApp, phone, or email. Quality • Reliability • Impact."/>
-  <meta property="og:image" content="images/logo/blue-logo-512.png"/>
+  <meta property="og:image" content="https://www.lwgpartnersnetwork.com/images/logo/blue-logo-512.png"/>
+  <meta property="og:url" content="https://www.lwgpartnersnetwork.com/contact.html"/>
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content="Contact — LWG Partners Network"/>
+  <meta name="twitter:description" content="Reach us via WhatsApp, phone, or email. Quality • Reliability • Impact."/>
+  <meta name="twitter:image" content="https://www.lwgpartnersnetwork.com/images/logo/blue-logo-512.png"/>
+
+  <!-- Icons -->
+  <link rel="icon" href="images/logo/blue-logo-512.png"/>
 
   <!-- Styles + core helpers (cart badge + mobile nav) -->
   <link rel="stylesheet" href="css/styles.css"/>
   <script defer src="js/app.js"></script>
 
-  <!-- Organization + contact structured data -->
+  <!-- Structured data -->
   <script type="application/ld+json">
   {
     "@context":"https://schema.org",
     "@type":"Organization",
     "name":"LWG Partners Network",
-    "url":"https://lwgpartnersnetwork.com",
-    "logo":"https://lwgpartnersnetwork.github.io/-LWG-Store/docs/images/lwg-logo-blue.png",
+    "url":"https://www.lwgpartnersnetwork.com/",
+    "logo":"https://www.lwgpartnersnetwork.com/images/logo/blue-logo-512.png",
+    "sameAs":[
+      "https://wa.me/23272146015",
+      "https://www.facebook.com/profile.php?id=61562704062688",
+      "https://www.youtube.com/@LWGPartnersnetwork",
+      "https://www.tiktok.com/@lwgpartnersnetwork",
+      "https://www.instagram.com/lwgpartnersnetwork"
+    ],
     "contactPoint":[{
       "@type":"ContactPoint",
       "telephone":"+23272146015",
@@ -36,6 +56,14 @@
       "areaServed":"SL",
       "availableLanguage":["en"]
     }]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"WebSite",
+    "name":"LWG Partners Network",
+    "url":"https://www.lwgpartnersnetwork.com/"
   }
   </script>
 </head>
@@ -86,7 +114,7 @@
             <h3>Reach Us</h3>
             <p><strong>Phone/WhatsApp:</strong> <a href="tel:+23272146015">+232 72 146 015</a></p>
             <p><strong>Email:</strong> <a href="mailto:info@lwgpartnersnetwork.com">info@lwgpartnersnetwork.com</a></p>
-            <p><strong>Website:</strong> <a href="https://lwgpartnersnetwork.com" target="_blank" rel="noopener">lwgpartnersnetwork.com</a></p>
+            <p><strong>Website:</strong> <a href="https://www.lwgpartnersnetwork.com" target="_blank" rel="noopener">lwgpartnersnetwork.com</a></p>
           </div>
           <div class="contact-card">
             <h3>Business Hours</h3>
@@ -97,7 +125,7 @@
       </div>
     </section>
 
-    <!-- Optional contact form that sends to WhatsApp (no backend needed) -->
+    <!-- Contact form to WhatsApp (no backend needed) -->
     <section class="card" style="margin-top:20px;">
       <h2>Send Us a Message</h2>
       <form id="contactForm" class="form-grid" onsubmit="return sendToWhatsApp(event)">
@@ -135,27 +163,30 @@
       <div class="socials">
         <a href="https://wa.me/23272146015" target="_blank" rel="noopener">WhatsApp</a>
         <a href="mailto:info@lwgpartnersnetwork.com">Email</a>
-        <a href="https://lwgpartnersnetwork.com" target="_blank" rel="noopener">Website</a>
+        <a href="https://www.lwgpartnersnetwork.com" target="_blank" rel="noopener">Website</a>
       </div>
     </div>
   </footer>
 
-  <!-- Tiny inline script to build a WhatsApp message from the form -->
+  <!-- WhatsApp form handler -->
   <script>
     function sendToWhatsApp(e){
       e.preventDefault();
-      const name = document.getElementById('cName').value.trim();
+      const name  = document.getElementById('cName').value.trim();
       const phone = document.getElementById('cPhone').value.trim();
-      const msg = document.getElementById('cMsg').value.trim();
+      const msg   = document.getElementById('cMsg').value.trim();
 
-      const text =
-        `Contact Request%0A` +
-        `Name: ${encodeURIComponent(name)}%0A` +
-        `Phone: ${encodeURIComponent(phone)}%0A` +
-        `Message: ${encodeURIComponent(msg)}%0A` +
-        `%0AFrom: ${encodeURIComponent(location.href)}`;
+      const text = [
+        'Contact Request',
+        `Name: ${name}`,
+        `Phone: ${phone}`,
+        `Message: ${msg}`,
+        '',
+        `From: ${location.href}`
+      ].join('\n');
 
-      window.open(`https://wa.me/23272146015?text=${text}`, '_blank', 'noopener');
+      const url = `https://wa.me/23272146015?text=${encodeURIComponent(text)}`;
+      window.open(url, '_blank', 'noopener');
       return false;
     }
   </script>

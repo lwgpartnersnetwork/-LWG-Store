@@ -4,14 +4,17 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>LWG Partners Network — Admin</title>
-  <meta name="description" content="LWG Partners Network — Quality • Reliability • Impact"/>
+  <meta name="description" content="Manage products for LWG Partners Network. Local-only admin (no backend)."/>
 
   <!-- Icons & Styles -->
-  <link rel="icon" href="images/lwg-logo-blue.png"/>
+  <link rel="icon" href="images/logo/blue-logo-512.png"/>
   <link rel="stylesheet" href="css/styles.css"/>
 
-  <!-- Core helpers (cart store, badge, mobile nav) — cache-busted -->
+  <!-- Core helpers (cart store, badge, mobile nav) -->
   <script defer src="js/app.js?v=2025-09-07-1"></script>
+
+  <!-- SweetAlert for nicer prompts/toasts (optional but used by products.js if present) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <!-- Prevent form resubmission on refresh -->
   <script>
@@ -25,7 +28,7 @@
   <header class="site-header">
     <div class="wrap header-inner">
       <a class="brand" href="index.html">
-        <img src="images/lwg-logo-blue.png" alt="LWG Partners Network"/>
+        <img src="images/logo/blue-logo-banner.png" alt="LWG Partners Network"/>
         <div class="brand-text">
           <strong>LWG Partners Network</strong>
           <span class="tagline">Quality • Reliability • Impact</span>
@@ -52,24 +55,29 @@
   <!-- Main -->
   <main class="wrap" id="main">
     <section class="card" aria-labelledby="adminTitle">
-      <div class="admin-bar" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
         <h1 id="adminTitle">Admin — Products</h1>
+
+        <!-- Local-only status + tools -->
         <div class="admin-actions" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <span id="adminStatus" class="muted small" role="status" aria-live="polite">Status: checking…</span>
-          <button id="adminLoginBtn" class="btn" type="button">Admin Login</button>
-          <button id="adminLogoutBtn" class="btn danger" type="button" style="display:none;">Logout</button>
-          <button id="adminRefreshBtn" class="btn ghost" type="button" title="Re-fetch products from the server">Refresh</button>
+          <span class="small" style="background:#f1f5f9;border:1px solid #e5e7eb;border-radius:999px;padding:6px 10px">
+            Mode: <strong>Local (no backend)</strong>
+          </span>
+          <button id="btnExport" class="btn" type="button" title="Download products.json">Export</button>
+          <button id="btnImport" class="btn" type="button" title="Import a products.json file">Import</button>
+          <button id="adminRefreshBtn" class="btn ghost" type="button" title="Refresh list">Refresh</button>
         </div>
       </div>
 
       <p class="muted">
-        Add or manage products. When logged in, data saves to your <strong>server</strong>.
-        If the API is unreachable, it falls back to local demo storage (dev only).
+        Add or manage products. Your catalog is saved in this browser only (localStorage). Use
+        <em>Export</em> to download <code>products.json</code> and <em>Import</em> to load it on another device.
       </p>
 
+      <!-- Add product form (handled by products.js — local-only) -->
       <form id="productForm" class="form-grid" autocomplete="off" aria-describedby="formHelp">
         <label>Title
-          <input name="title" required aria-required="true"/>
+          <input name="title" required aria-required="true" placeholder="e.g., Navy White Polo"/>
         </label>
 
         <label>Category
@@ -77,7 +85,7 @@
         </label>
 
         <label>Price (NLe)
-          <input name="price" type="number" min="0" step="0.01" required aria-required="true"/>
+          <input name="price" type="number" min="0" step="0.01" required aria-required="true" placeholder="200"/>
         </label>
 
         <label>Stock
@@ -85,7 +93,7 @@
         </label>
 
         <label>Image URL
-          <input name="image" placeholder="https://…"/>
+          <input name="image" placeholder="https://… (direct image link)"/>
         </label>
 
         <label class="span-2">Description
@@ -93,12 +101,12 @@
         </label>
 
         <p id="formHelp" class="muted small span-2">
-          Tip: You can paste a direct image link for product photos (e.g., from your CDN or image host).
+          Tip: For images, paste a direct link (for example from an image host or your own domain).
         </p>
 
         <div class="span-2 actions">
           <button class="btn primary" type="submit">Save Product</button>
-          <button class="btn danger" type="button" id="clearProducts" title="Dev only — clears local demo products">
+          <button class="btn danger" type="button" id="clearProducts" title="Clears local products on this device only">
             Clear Local (Dev)
           </button>
         </div>
@@ -126,61 +134,68 @@
     </div>
   </footer>
 
-  <!-- SweetAlert for nicer prompts -->
-  <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <!-- Page logic: API calls, admin actions, rendering — cache-busted -->
-  <script defer src="js/products.js?v=2025-09-07-1"></script>
-
-  <!-- Admin wiring -->
+  <!-- Page logic: admin helpers (export/import/refresh) -->
   <script>
+    // These helpers are only for this page; products.js handles add/delete/list.
     document.addEventListener('DOMContentLoaded', () => {
-      const statusEl   = document.getElementById('adminStatus');
-      const loginBtn   = document.getElementById('adminLoginBtn');
-      const logoutBtn  = document.getElementById('adminLogoutBtn');
-      const refreshBtn = document.getElementById('adminRefreshBtn');
+      const PKEY = 'lwg_products';
+      const $ = (s, r=document) => r.querySelector(s);
 
-      // keep ARIA-expanded in sync for the hamburger
-      const navBtn = document.querySelector('.nav-toggle');
-      const navEl  = document.getElementById('siteNav');
-      if (navBtn && navEl) {
-        navBtn.addEventListener('click', () => {
-          const open = navEl.classList.toggle('open');
-          navBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      const exportBtn  = $('#btnExport');
+      const importBtn  = $('#btnImport');
+      const refreshBtn = $('#adminRefreshBtn');
+
+      function readProducts(){
+        try { return JSON.parse(localStorage.getItem(PKEY) || '[]'); }
+        catch { return []; }
+      }
+      function writeProducts(arr){
+        localStorage.setItem(PKEY, JSON.stringify(Array.isArray(arr) ? arr : []));
+      }
+
+      // Export products.json
+      exportBtn?.addEventListener('click', () => {
+        const data = readProducts();
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'products.json';
+        a.click();
+        URL.revokeObjectURL(a.href);
+      });
+
+      // Import products.json
+      importBtn?.addEventListener('click', () => {
+        const inp = document.createElement('input');
+        inp.type = 'file';
+        inp.accept = 'application/json,.json';
+        inp.addEventListener('change', async () => {
+          const f = inp.files?.[0]; if (!f) return;
+          try {
+            const text = await f.text();
+            const arr = JSON.parse(text);
+            if (!Array.isArray(arr)) throw new Error('JSON must be an array');
+            // Ensure there is an id for every product (shop expects ids)
+            const fixed = arr.map(x => ({ ...x, id: x.id || ('sku-' + Math.random().toString(36).slice(2,7)) }));
+            writeProducts(fixed);
+            window.dispatchEvent(new Event('admin:refresh'));
+            window.Swal && Swal.fire({ icon:'success', title:'Imported', timer:1000, showConfirmButton:false });
+          } catch (e) {
+            window.Swal ? Swal.fire({ icon:'error', title:'Invalid JSON file' }) : alert('Invalid JSON file.');
+          }
         });
-      }
-
-      function refreshStatus(){
-        const ok = window.LWG_AUTH?.isLoggedIn?.();
-        statusEl.textContent = ok ? 'Status: Logged in' : 'Status: Not logged in';
-        loginBtn.style.display  = ok ? 'none' : 'inline-block';
-        logoutBtn.style.display = ok ? 'inline-block' : 'none';
-      }
-
-      loginBtn.addEventListener('click', async () => {
-        try{
-          await window.LWG_AUTH.login();
-          window.Swal && Swal.fire({ icon:'success', title:'Logged in', timer:1000, showConfirmButton:false });
-        }catch(e){
-          window.Swal && Swal.fire({ icon:'error', title:'Login cancelled or failed' });
-        }finally{
-          refreshStatus();
-        }
+        inp.click();
       });
 
-      logoutBtn.addEventListener('click', () => {
-        window.LWG_AUTH.logout();
-        window.Swal && Swal.fire({ icon:'success', title:'Logged out', timer:900, showConfirmButton:false });
-        refreshStatus();
-      });
-
-      // Re-fetch the products list (products.js listens to this custom event)
-      refreshBtn.addEventListener('click', () => {
+      // Refresh list
+      refreshBtn?.addEventListener('click', () => {
         window.dispatchEvent(new Event('admin:refresh'));
-        window.Swal && Swal.fire({ icon:'info', title:'Refreshing…', timer:700, showConfirmButton:false });
+        window.Swal && Swal.fire({ icon:'info', title:'Refreshing…', timer:600, showConfirmButton:false });
       });
-
-      refreshStatus();
     });
   </script>
+
+  <!-- products.js (LOCAL ONLY version) will attach form/listeners and render the product list -->
+  <script defer src="js/products.js?v=local-only-1"></script>
 </body>
 </html>
