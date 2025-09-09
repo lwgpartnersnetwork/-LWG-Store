@@ -10,29 +10,58 @@
 /* ================ tiny DOM helper ================ */
 const $ = (s, r = document) => r.querySelector(s);
 
-/* ================ cart helpers =================== */
+/* ================ safe JSON helpers ============== */
 function safeParse(json, fallback) {
-  try { const v = JSON.parse(json); return Array.isArray(v) ? v : fallback; }
-  catch { return fallback; }
+  try {
+    const v = JSON.parse(json);
+    return Array.isArray(v) ? v : fallback;
+  } catch {
+    return fallback;
+  }
+}
+function safeStringify(v) {
+  try { return JSON.stringify(v); } catch { return '[]'; }
 }
 
+/* ================ cart helpers =================== */
 function readCart() {
+  // Always return an array of items {id, title?, price?, image?, qty}
   return safeParse(localStorage.getItem('lwg_cart'), []);
 }
 
+/** Merge duplicate IDs (defensive) */
+function normalizeCart(arr) {
+  const map = new Map();
+  (Array.isArray(arr) ? arr : []).forEach(it => {
+    const id = String(it?.id ?? '');
+    const qty = Number(it?.qty ?? 0);
+    if (!id || qty <= 0) return;
+    map.set(id, (map.get(id) || 0) + qty);
+  });
+  return Array.from(map, ([id, qty]) => ({ id, qty }));
+}
+
 function writeCart(arr) {
-  const data = Array.isArray(arr) ? arr : [];
-  localStorage.setItem('lwg_cart', JSON.stringify(data));
+  const normalized = normalizeCart(arr);
+  localStorage.setItem('lwg_cart', safeStringify(normalized));
   updateCartBadge();
-  // let other scripts/pages react
+  // Let other scripts/pages react
   window.dispatchEvent(new Event('cart:changed'));
 }
 
+/* ================ badge ========================== */
 function updateCartBadge() {
   const badge = document.getElementById('cartBadge');
   if (!badge) return;
   const totalQty = readCart().reduce((sum, it) => sum + (Number(it.qty) || 0), 0);
   badge.textContent = String(totalQty);
+
+  // Subtle micro-animation when the number changes
+  badge.style.transform = 'scale(1.08)';
+  badge.style.transition = 'transform 120ms ease';
+  requestAnimationFrame(() => {
+    setTimeout(() => { badge.style.transform = 'scale(1)'; }, 80);
+  });
 }
 
 /* ================ one-time init ================== */
@@ -40,9 +69,9 @@ function updateCartBadge() {
   // Optional: reset via ?resetcart=1
   const params = new URLSearchParams(location.search);
   if (!localStorage.getItem('lwg_cart') || params.get('resetcart') === '1') {
-    writeCart([]); // start clean
+    writeCart([]);
   } else {
-    // sanitize any previous invalid value
+    // Sanitize any previous invalid value & merge duplicates
     writeCart(readCart());
   }
 })();
@@ -80,4 +109,8 @@ window.addEventListener('storage', (e) => {
 });
 
 /* ============== global export ==================== */
-window.__lwg = { readCart, writeCart, updateCartBadge };
+window.__lwg = {
+  readCart,
+  writeCart,
+  updateCartBadge
+};
