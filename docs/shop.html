@@ -9,7 +9,7 @@
   <meta name="theme-color" content="#002F5F"/>
   <meta name="robots" content="index,follow"/>
 
-  <!-- Canonical (real domain) -->
+  <!-- Canonical (use your live domain if set) -->
   <link rel="canonical" href="https://www.lwgpartnersnetwork.com/shop.html"/>
 
   <!-- Open Graph -->
@@ -143,16 +143,17 @@
       <!-- ===== ADMIN ===== -->
       <div class="admin-only">
         <div class="shop-tools">
+          <a class="btn" href="129admin.html" target="_blank" rel="noopener">Open Full Admin</a>
+          <button id="btnSync"   class="btn" title="Fetch latest data/products.json from the server">Sync from Server</button>
           <button id="btnExport" class="btn">Export products (JSON)</button>
           <button id="btnImport" class="btn">Import products (JSON)</button>
-          <button id="btnClear"  class="btn">Clear all products</button>
+          <button id="btnClear"  class="btn">Clear all products (local)</button>
         </div>
 
         <details class="add-panel">
           <summary id="panelSummary">➕ Add a Product</summary>
           <div style="margin-top:10px">
             <div class="form-grid">
-              <!-- hidden id used only while editing -->
               <input id="pId" type="hidden"/>
 
               <label>Title
@@ -187,8 +188,8 @@
               </div>
             </div>
             <p class="notice" style="margin-top:10px">
-              Admin tip: open <b>shop.html#admin</b> (or <b>?admin=1</b>) to show this panel on any device.
-              Long-press the logo or tap it 5× as another shortcut.
+              Tip: to publish for everyone, export and update <code>docs/data/products.json</code> in your repo.
+              New visitors to the Shop auto-load from that server file.
             </p>
           </div>
         </details>
@@ -212,12 +213,15 @@
     </div>
   </footer>
 
-  <!-- Inline script: products store + Admin Mode + aligned rendering + proper EDIT -->
+  <!-- Inline script: products store + Admin Mode + server sync + proper EDIT -->
   <script>
     (function(){
       const KEY = 'lwg_products';
+      const REMOTE_HASH_KEY = 'lwg_products_remote_hash';
       const CART_KEY = 'lwg_cart';
       const ADMIN_KEY = 'lwg_admin';
+      // Same file the public site uses
+      const REMOTE_URL = 'data/products.json';
 
       const $ = (s, el=document)=>el.querySelector(s);
 
@@ -228,6 +232,10 @@
       const money = n => new Intl.NumberFormat('en-SL',{maximumFractionDigits:0}).format(num(n));
       const slug = s => String(s||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
       const genId = title => `${slug(title)}-${Math.random().toString(36).slice(2,7)}`;
+      const hash = obj => {
+        try { return String(btoa(unescape(encodeURIComponent(JSON.stringify(obj))))).slice(0,24); }
+        catch { return String(Date.now()); }
+      };
 
       // ----- Admin mode
       function setAdmin(on){ document.body.setAttribute('data-admin', on ? 'true':'false'); localStorage.setItem(ADMIN_KEY,on?'1':'0'); }
@@ -246,7 +254,51 @@
 
       // ----- Storage
       const readProducts = ()=>{ try { return JSON.parse(localStorage.getItem(KEY))||[]; } catch{ return [];} };
-      const writeProducts = arr => { localStorage.setItem(KEY, JSON.stringify(arr||[])); buildCats(arr||[]); render(); };
+      const writeProducts = arr => {
+        localStorage.setItem(KEY, JSON.stringify(arr||[]));
+        buildCats(arr||[]);
+        render();
+      };
+
+      // ----- Server sync
+      async function fetchRemote(){
+        const res = await fetch(REMOTE_URL, { cache: 'no-store' });
+        if (!res.ok) throw new Error('fetch failed');
+        const data = await res.json();
+        if (!Array.isArray(data)) throw new Error('bad json');
+        return data;
+      }
+      async function seedFromServerIfEmpty(){
+        const local = readProducts();
+        if (local.length) return false;
+        try {
+          const remote = await fetchRemote();
+          writeProducts(remote);
+          localStorage.setItem(REMOTE_HASH_KEY, hash(remote));
+          return true;
+        } catch { return false; }
+      }
+      async function forceSyncFromServer(){
+        try {
+          const remote = await fetchRemote();
+          writeProducts(remote);
+          localStorage.setItem(REMOTE_HASH_KEY, hash(remote));
+          alert('Synced from server.');
+        } catch {
+          alert('Could not fetch data/products.json');
+        }
+      }
+      async function softCheckForUpdates(){
+        // For returning visitors with local cache: if server changed, refresh silently.
+        try {
+          const remote = await fetchRemote();
+          const h = hash(remote);
+          if (h && h !== localStorage.getItem(REMOTE_HASH_KEY)) {
+            writeProducts(remote);
+            localStorage.setItem(REMOTE_HASH_KEY, h);
+          }
+        } catch {}
+      }
 
       // ----- Filters
       const grid = $('#productGrid');
@@ -274,7 +326,7 @@
         });
 
         if (!list.length){
-          grid.innerHTML = '<div class="card" style="border-color:#eab308">No products yet. Add some (admin only).</div>';
+          grid.innerHTML = '<div class="card" style="border-color:#eab308">No products yet. Add some (admin only) or sync from server.</div>';
           return;
         }
 
@@ -318,7 +370,7 @@
       search?.addEventListener('input', render);
       catSel?.addEventListener('change', render);
 
-      // ----- ADMIN wires (form + Edit mode)
+      // ----- ADMIN wires (form + Edit mode + Sync)
       const addPanel    = document.querySelector('details.add-panel');
       const panelTitle  = document.getElementById('panelSummary');
       const pIdEl       = document.getElementById('pId');
@@ -327,6 +379,7 @@
       const btnExport   = document.getElementById('btnExport');
       const btnImport   = document.getElementById('btnImport');
       const btnClear    = document.getElementById('btnClear');
+      const btnSync     = document.getElementById('btnSync');
       const fileInputEl = document.getElementById('pImageFile');
       const imgUrlEl    = document.getElementById('pImage');
       const previewEl   = document.getElementById('pPreview');
@@ -346,7 +399,7 @@
         if (previewEl) previewEl.removeAttribute('src');
       }
       function enterEditMode(product){
-        pIdEl.value = product.id;                      // keep the same id!
+        pIdEl.value = product.id;
         fillForm(product);
         if (addPanel) addPanel.open = true;
         if (panelTitle) panelTitle.textContent = '✏️ Edit Product';
@@ -359,7 +412,6 @@
         if (btnAdd) btnAdd.textContent = 'Add Product';
       }
 
-      // image file -> base64 preview
       fileInputEl?.addEventListener('change', ()=>{
         const f = fileInputEl.files?.[0]; if(!f) return;
         const r = new FileReader();
@@ -383,14 +435,12 @@
         const items = readProducts();
 
         if (editingId) {
-          // UPDATE existing by id
           const idx = items.findIndex(x => String(x.id) === String(editingId));
           if (idx > -1) items[idx] = { ...items[idx], ...p, id: editingId };
-          else items.push({ id: editingId, ...p }); // fallback
+          else items.push({ id: editingId, ...p });
           writeProducts(items);
           exitEditMode();
         } else {
-          // ADD new
           const id = genId(p.title);
           items.push({ id, ...p });
           writeProducts(items);
@@ -414,12 +464,15 @@
             if (!Array.isArray(arr)) throw new Error('JSON must be an array');
             const fixed = arr.map(x => ({...x, id: x.id || genId(x.title||'product')}));
             writeProducts(fixed);
+            localStorage.setItem(REMOTE_HASH_KEY, hash(fixed));
           } catch { alert('Invalid JSON file.'); }
         });
         inp.click();
       });
 
-      btnClear?.addEventListener('click', ()=>{ if (confirm('Clear ALL products?')) writeProducts([]); });
+      btnClear?.addEventListener('click', ()=>{ if (confirm('Clear ALL local products?')) writeProducts([]); });
+
+      btnSync?.addEventListener('click', ()=>{ forceSyncFromServer(); });
 
       // ----- Grid actions (qty, add, edit, delete)
       grid.addEventListener('click', (e)=>{
@@ -445,25 +498,31 @@
         }
 
         if (btn.dataset.action === 'edit'){
-          // open panel with existing values, keep id to UPDATE (no duplicates)
           enterEditMode(product);
         }
 
         if (btn.dataset.action === 'del'){
           writeProducts(items.filter(p=>String(p.id)!==String(id)));
-          if (String(pIdEl.value) === String(id)) exitEditMode(); // if we were editing this one
+          if (String(pIdEl.value) === String(id)) exitEditMode();
         }
       });
 
       // Boot
-      buildCats(readProducts());
-      // Pre-fill search from ?q= for SEO-friendly search links
-      const qparam = new URLSearchParams(location.search).get('q');
-      if (qparam && document.getElementById('searchInput')) {
-        document.getElementById('searchInput').value = qparam;
-      }
-      render();
-      updateBadge();
+      (async function boot(){
+        await seedFromServerIfEmpty();
+        buildCats(readProducts());
+
+        const qparam = new URLSearchParams(location.search).get('q');
+        if (qparam && document.getElementById('searchInput')) {
+          document.getElementById('searchInput').value = qparam;
+        }
+        render();
+        updateBadge();
+
+        // Soft check for remote updates after load (and again every 10 minutes)
+        setTimeout(softCheckForUpdates, 1500);
+        setInterval(softCheckForUpdates, 10*60*1000);
+      })();
     })();
   </script>
 </body>

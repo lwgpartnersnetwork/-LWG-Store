@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <!-- Required meta -->
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+  <title>LWG Shop — Admin</title>
+  <meta name="description" content="Manage LWG Shop products (local storage). Add, edit, delete, import/export."/>
+  <meta name="theme-color" content="#002F5F"/>
+
+  <!-- Do not index this utility page -->
+  <meta name="robots" content="noindex,nofollow"/>
+
+  <!-- Canonical (point to your domain and this filename) -->
+  <link rel="canonical" href="https://www.lwgpartnersnetwork.com/129admin.html"/>
+
+  <!-- Icons + CSS -->
+  <link rel="icon" href="images/logo/blue-logo-512.png"/>
+  <link rel="stylesheet" href="css/styles.css"/>
+
+  <!-- Core helpers: badge, mobile nav, cart store -->
+  <script defer src="js/app.js"></script>
+
+  <style>
+    /* Small extras for this page only */
+    .admin-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .admin-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .preview{width:110px;height:110px;border:1px dashed #e5e7eb;border-radius:10px;background:#f8fafc;object-fit:cover}
+    .w100{width:100%}
+    .muted.small code{background:#f3f4f6;padding:2px 6px;border-radius:6px}
+
+    /* ---------- PIN gate overlay ---------- */
+    body.locked .hide-when-locked{ display:none !important; }
+    .pin-gate{
+      position:fixed; inset:0; display:none;
+      place-items:center; background:rgba(0,0,0,.35); z-index:9999;
+      padding:16px;
+    }
+    body.locked .pin-gate{ display:grid; }
+    .pin-card{
+      background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:18px;
+      max-width:420px; width:100%; box-shadow:0 10px 30px rgba(0,0,0,.15)
+    }
+    .pin-card h1{ margin:.2rem 0 8px; font-size:1.25rem; color:#002F5F }
+    .pin-row{ display:flex; gap:8px; align-items:center; margin-top:10px }
+    .pin-row input{
+      flex:1; padding:12px; border:1px solid #d8e1ee; border-radius:10px; font-size:1rem; letter-spacing:.2em; text-align:center
+    }
+    .pin-row button{ padding:12px 14px; border-radius:10px; border:1px solid #d8e1ee; background:#002F5F; color:#fff; font-weight:700; cursor:pointer }
+    .pin-help{ color:#64748b; font-size:.9rem; margin-top:8px }
+    .shake{ animation:shk .28s linear 1 }
+    @keyframes shk{ 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)} }
+  </style>
+</head>
+<body class="locked">
+  <!-- PIN Gate Overlay -->
+  <div class="pin-gate" id="pinGate" aria-modal="true" role="dialog" aria-labelledby="pinTitle">
+    <div class="pin-card" id="pinCard">
+      <h1 id="pinTitle">Admin PIN</h1>
+      <p class="pin-help">Enter your 4–8 digit PIN to unlock this admin page on this device.</p>
+      <div class="pin-row">
+        <input id="pinInput" inputmode="numeric" maxlength="8" autocomplete="one-time-code" placeholder="••••" aria-label="Enter PIN"/>
+        <button id="pinBtn">Unlock</button>
+      </div>
+      <p class="pin-help">Tip: you can also open with <code>?pin=YOURPIN</code> once, it’ll stay unlocked for 6 hours.</p>
+    </div>
+  </div>
+
+  <!-- Header (hidden until unlocked) -->
+  <header class="site-header hide-when-locked">
+    <div class="wrap header-inner">
+      <a class="brand" href="index.html">
+        <img src="images/logo/blue-logo-banner.png" alt="LWG Partners Network"/>
+        <div class="brand-text">
+          <strong>LWG Partners Network</strong>
+          <span class="tagline">Quality • Reliability • Impact</span>
+        </div>
+      </a>
+
+      <!-- Mobile menu button -->
+      <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="siteNav">
+        <span></span><span></span><span></span>
+      </button>
+
+      <!-- Main nav -->
+      <nav class="nav" id="siteNav">
+        <a href="index.html">Home</a>
+        <a href="shop.html">Shop</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+        <a href="cart.html" class="cart-link">Cart <span id="cartBadge" class="badge">0</span></a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main (hidden until unlocked) -->
+  <main class="wrap hide-when-locked" id="main">
+    <section class="card" aria-labelledby="adminTitle">
+      <div class="admin-bar">
+        <h1 id="adminTitle">LWG Shop — Admin</h1>
+        <div class="admin-actions">
+          <a class="btn" href="shop.html#admin" rel="nofollow">Open Shop Admin Panel</a>
+          <button id="btnExport" class="btn">Export (JSON)</button>
+          <button id="btnImport" class="btn">Import (JSON)</button>
+          <button id="btnClear"  class="btn danger" title="Remove ALL products (local)">Clear ALL</button>
+        </div>
+      </div>
+      <p class="muted small">
+        This page saves products locally in your browser under <code>localStorage["lwg_products"]</code>.
+        The <b>Shop</b> reads from the same key. Export to back up; Import to restore.
+      </p>
+
+      <!-- Product form (add / edit) -->
+      <form id="productForm" class="form-grid" autocomplete="off" aria-describedby="formHelp">
+        <input type="hidden" name="id" id="pId"/>
+
+        <label>Title
+          <input name="title" id="pTitle" required aria-required="true" placeholder="Product title"/>
+        </label>
+
+        <label>Category
+          <input name="category" id="pCategory" placeholder="Men / Women / Kids / Electronics"/>
+        </label>
+
+        <label>Price (NLe)
+          <input name="price" id="pPrice" type="number" min="0" step="1" required aria-required="true" placeholder="250"/>
+        </label>
+
+        <label>Stock
+          <input name="stock" id="pStock" type="number" min="0" required aria-required="true" placeholder="50"/>
+        </label>
+
+        <label>Image URL / Path
+          <input name="image" id="pImage" placeholder="images/products/polo1.jpg or https://…"/>
+        </label>
+
+        <label>Or choose image file
+          <input id="pImageFile" type="file" accept="image/*"/>
+        </label>
+
+        <div class="span-2">
+          <img id="pPreview" class="preview" alt="image preview"/>
+        </div>
+
+        <label class="span-2">Description
+          <textarea name="description" id="pDesc" rows="3" placeholder="Short description"></textarea>
+        </label>
+
+        <p id="formHelp" class="muted small span-2">
+          Tip: paste a direct image link or use the file picker (we store the file as a data URL).
+        </p>
+
+        <div class="span-2 actions">
+          <button class="btn primary" type="submit" id="btnSave">Save Product</button>
+          <button class="btn" type="button" id="btnReset">Reset</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card" aria-labelledby="listTitle">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <h2 id="listTitle">Existing Products</h2>
+        <div class="muted small">Click <em>Edit</em> to modify, or <em>Delete</em> to remove.</div>
+      </div>
+      <div id="adminList" class="admin-list" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <!-- Footer (hidden until unlocked) -->
+  <footer class="site-footer hide-when-locked">
+    <div class="wrap foot">
+      <p>© <span id="year"></span> LWG Partners Network — Creating Impact Globally</p>
+      <div class="socials">
+        <a href="https://wa.me/23272146015" target="_blank" rel="noopener">WhatsApp</a>
+        <a href="mailto:info@lwgpartnersnetwork.com">Email</a>
+        <a href="https://www.lwgpartnersnetwork.com" target="_blank" rel="noopener">Website</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Page logic: PIN gate + local products + edit mode + import/export -->
+  <script>
+    (function(){
+      /* ================= PIN gate (obscurity, not true security) =================
+         Change ADMIN_PIN below. Unlock lasts 6 hours in localStorage.
+      ========================================================================== */
+      const ADMIN_PIN = '1290';                  // <-- CHANGE YOUR PIN HERE
+      const UNLOCK_KEY = 'lwg_admin_unlock_until';
+      const UNLOCK_MS  = 6 * 60 * 60 * 1000;     // 6 hours
+
+      const pinGate = document.getElementById('pinGate');
+      const pinCard = document.getElementById('pinCard');
+      const pinInput= document.getElementById('pinInput');
+      const pinBtn  = document.getElementById('pinBtn');
+
+      const isUnlocked = () => Date.now() < (Number(localStorage.getItem(UNLOCK_KEY)) || 0);
+      const unlock = () => {
+        localStorage.setItem(UNLOCK_KEY, String(Date.now() + UNLOCK_MS));
+        document.body.classList.remove('locked');
+        // focus the title after unlock for accessibility
+        const t = document.getElementById('adminTitle'); t && t.focus && t.focus();
+      };
+
+      function tryAutoUnlockFromQuery(){
+        const p = new URLSearchParams(location.search).get('pin');
+        if (p && p === ADMIN_PIN) unlock();
+      }
+
+      function submitPin(){
+        const val = (pinInput.value || '').trim();
+        if (!val) { pinCard.classList.add('shake'); setTimeout(()=>pinCard.classList.remove('shake'), 280); return; }
+        if (val === ADMIN_PIN) { unlock(); }
+        else { pinCard.classList.add('shake'); setTimeout(()=>pinCard.classList.remove('shake'), 280); pinInput.select(); }
+      }
+
+      // Initial lock state
+      if (!isUnlocked()) {
+        document.body.classList.add('locked');
+      } else {
+        document.body.classList.remove('locked');
+      }
+
+      // Wire PIN UI
+      pinBtn?.addEventListener('click', submitPin);
+      pinInput?.addEventListener('keydown', (e)=>{ if (e.key === 'Enter') submitPin(); });
+
+      // Also support ?pin=XXXX
+      if (!isUnlocked()) tryAutoUnlockFromQuery();
+
+      /* ================= Products (same as before) ================= */
+      const KEY = 'lwg_products';
+
+      const $  = (s, el=document)=>el.querySelector(s);
+      const $$ = (s, el=document)=>Array.from(el.querySelectorAll(s));
+
+      const esc = s=>String(s||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+      const escAttr = s=>esc(s).replaceAll('"','&quot;');
+      const slug = s => String(s||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+      const genId = title => `${slug(title)}-${Math.random().toString(36).slice(2,7)}`;
+
+      function safeParse(json, fb){ try{ return JSON.parse(json); }catch{ return fb; } }
+      const readProducts  = () => safeParse(localStorage.getItem(KEY), []) || [];
+      const writeProducts = (arr) => localStorage.setItem(KEY, JSON.stringify(arr||[]));
+
+      // Elements
+      const form      = $('#productForm');
+      const btnSave   = $('#btnSave');
+      const btnReset  = $('#btnReset');
+      const btnExport = $('#btnExport');
+      const btnImport = $('#btnImport');
+      const btnClear  = $('#btnClear');
+      const listEl    = $('#adminList');
+
+      const pId       = $('#pId');
+      const pTitle    = $('#pTitle');
+      const pCategory = $('#pCategory');
+      const pPrice    = $('#pPrice');
+      const pStock    = $('#pStock');
+      const pImage    = $('#pImage');
+      const pImageFile= $('#pImageFile');
+      const pPreview  = $('#pPreview');
+      const pDesc     = $('#pDesc');
+
+      // Image file -> data URL preview
+      pImageFile?.addEventListener('change', ()=>{
+        const f = pImageFile.files?.[0]; if(!f) return;
+        const r = new FileReader();
+        r.onload = ()=>{ pImage.value = String(r.result||''); if(pPreview) pPreview.src = pImage.value; };
+        r.readAsDataURL(f);
+      });
+      pImage?.addEventListener('input', ()=>{ if(pPreview) pPreview.src = pImage.value; });
+
+      function clearForm(){
+        pId.value = '';
+        pTitle.value = '';
+        pCategory.value = '';
+        pPrice.value = '';
+        pStock.value = '';
+        pImage.value = '';
+        pDesc.value = '';
+        if (pImageFile) pImageFile.value = '';
+        if (pPreview) pPreview.removeAttribute('src');
+        if (btnSave) btnSave.textContent = 'Save Product';
+      }
+
+      btnReset?.addEventListener('click', clearForm);
+
+      form?.addEventListener('submit', (e)=>{
+        e.preventDefault();
+
+        const payload = {
+          title: (pTitle.value||'').trim(),
+          category: (pCategory.value||'').trim(),
+          price: Number(pPrice.value||0),
+          stock: Number(pStock.value||0),
+          image: (pImage.value||'').trim(),
+          description: (pDesc.value||'').trim()
+        };
+        if (!payload.title){ alert('Title is required.'); return; }
+
+        const items = readProducts();
+        const editingId = (pId.value||'').trim();
+
+        if (editingId){
+          const idx = items.findIndex(x => String(x.id) === String(editingId));
+          if (idx > -1) items[idx] = { ...items[idx], ...payload, id: editingId };
+          else items.push({ id: editingId, ...payload });
+        } else {
+          const id = genId(payload.title);
+          items.unshift({ id, ...payload });
+        }
+
+        writeProducts(items);
+        clearForm();
+        renderList();
+        window.dispatchEvent(new Event('admin:refresh'));
+      });
+
+      function renderList(){
+        const items = readProducts();
+        if (!items.length){
+          listEl.innerHTML = '<div class="card" style="border-color:#eab308">No products yet. Add your first product above.</div>';
+          return;
+        }
+        listEl.innerHTML = items.map(p => `
+          <div class="admin-item" data-id="${escAttr(p.id)}">
+            <div class="row">
+              <strong>${esc(p.title)}</strong>
+              <span>NLe ${(Number(p.price)||0).toFixed(0)}</span>
+            </div>
+            <div class="row small muted">
+              <span>${esc(p.category || 'General')}</span>
+              <span>Stock: ${(Number(p.stock)||0)}</span>
+            </div>
+            ${p.image ? `<img src="${escAttr(p.image)}" alt="" onerror="this.style.display='none'"/>` : ''}
+            <div class="actions">
+              <button class="btn" data-action="edit">Edit</button>
+              <button class="btn danger" data-action="del">Delete</button>
+            </div>
+          </div>
+        `).join('');
+
+        // Wire actions
+        Array.from(listEl.querySelectorAll('.admin-item .btn')).forEach(b=>{
+          b.addEventListener('click', ()=>{
+            const card = b.closest('.admin-item');
+            const id = card?.dataset?.id;
+            if (!id) return;
+            const items = readProducts();
+            const product = items.find(x => String(x.id) === String(id));
+            if (!product) return;
+
+            if (b.dataset.action === 'edit'){
+              pId.value = product.id;
+              pTitle.value = product.title || '';
+              pCategory.value = product.category || '';
+              pPrice.value = product.price ?? '';
+              pStock.value = product.stock ?? '';
+              pImage.value = product.image || '';
+              pDesc.value = product.description || '';
+              if (pPreview && product.image) pPreview.src = product.image;
+              if (btnSave) btnSave.textContent = 'Save Changes';
+              form?.scrollIntoView({ behavior:'smooth', block:'start' });
+              pTitle?.focus();
+            }
+
+            if (b.dataset.action === 'del'){
+              if (!confirm('Delete this product?')) return;
+              writeProducts(items.filter(x => String(x.id) !== String(id)));
+              if (pId.value && String(pId.value) === String(id)) clearForm();
+              renderList();
+              window.dispatchEvent(new Event('admin:refresh'));
+            }
+          });
+        });
+      }
+
+      // Export / Import / Clear
+      btnExport?.addEventListener('click', ()=>{
+        const blob = new Blob([JSON.stringify(readProducts(), null, 2)], { type:'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'products.json';
+        a.click();
+        URL.revokeObjectURL(a.href);
+      });
+
+      btnImport?.addEventListener('click', ()=>{
+        const inp = document.createElement('input');
+        inp.type = 'file';
+        inp.accept = 'application/json,.json';
+        inp.addEventListener('change', async ()=>{
+          const f = inp.files?.[0]; if (!f) return;
+          try{
+            const text = await f.text();
+            const arr = JSON.parse(text);
+            if (!Array.isArray(arr)) throw new Error('JSON must be an array');
+            const fixed = arr.map(x => ({ ...x, id: x.id || genId(x.title || 'product') }));
+            writeProducts(fixed);
+            clearForm();
+            renderList();
+            window.dispatchEvent(new Event('admin:refresh'));
+          }catch(e){
+            alert('Invalid JSON file.');
+          }
+        });
+        inp.click();
+      });
+
+      btnClear?.addEventListener('click', ()=>{
+        if (!confirm('This will remove ALL products saved locally. Continue?')) return;
+        localStorage.removeItem('lwg_products');
+        clearForm();
+        renderList();
+        window.dispatchEvent(new Event('admin:refresh'));
+      });
+
+      // First render (only if already unlocked)
+      if (!document.body.classList.contains('locked')) {
+        renderList();
+      }
+
+      // When unlocked later (e.g., via PIN), render then.
+      const unlockObserver = new MutationObserver(()=> {
+        if (!document.body.classList.contains('locked')) {
+          renderList();
+          unlockObserver.disconnect();
+        }
+      });
+      unlockObserver.observe(document.body, { attributes:true, attributeFilter:['class'] });
+    })();
+  </script>
+</body>
+</html>
