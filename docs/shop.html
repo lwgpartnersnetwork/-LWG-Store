@@ -23,11 +23,9 @@
 
   <!-- Page-only tweaks (alignment + admin) -->
   <style>
-    /* Show admin block only in admin mode */
     .admin-only { display:none; }
     body[data-admin="true"] .admin-only { display:block; }
 
-    /* ===== Products grid: tidy, same height cards ===== */
     :root { --card-img-h: 220px; }
     .grid-products{
       display:grid;
@@ -35,7 +33,6 @@
       gap:16px;
       margin-top:12px;
     }
-
     .product-card{
       display:grid;
       grid-template-rows: var(--card-img-h) auto auto 1fr auto;
@@ -45,31 +42,21 @@
       padding:12px;
       background:#fff;
     }
-
-    .product-card .media{
-      width:100%; height:var(--card-img-h);
-      border-radius:10px; overflow:hidden; background:#f1f5f9;
-    }
-    .product-card .media img{
-      width:100%; height:100%; object-fit:cover; display:block;
-    }
-
+    .product-card .media{ width:100%; height:var(--card-img-h); border-radius:10px; overflow:hidden; background:#f1f5f9; }
+    .product-card .media img{ width:100%; height:100%; object-fit:cover; display:block; }
     .product-card h3{
       margin:0; font-size:1.05rem; line-height:1.3;
       display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
-      min-height:2.6em; /* keep title area equal */
+      min-height:2.6em;
     }
     .product-meta{ color:#64748b; font-size:.93rem; min-height:1.2em; }
-
     .product-desc{
       color:#475569; font-size:.92rem;
       display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
-      min-height:2.6em; /* keep description area equal */
+      min-height:2.6em;
     }
-
     .price{ font-weight:700; }
 
-    /* Actions stick to the bottom row and align */
     .product-actions{
       margin-top:8px;
       display:grid; grid-template-columns:40px 1fr 40px; gap:8px; align-items:center;
@@ -84,12 +71,11 @@
     }
     .product-actions .btn.icon{ padding:9px 0; font-size:18px; }
     .product-actions .btn.primary{
-      grid-column:1 / -1; background:#002F5F; color:#fff; border-color:#002F5F;
-      text-align:center;
+      grid-column:1 / -1; background:#002F5F; color:#fff; border-color:#002F5F; text-align:center;
     }
     .product-actions .btn.danger{ background:#fff1f2; border-color:#fecdd3 }
+    .product-actions .row-admin{ grid-column:1/-1; display:flex; gap:8px; flex-wrap:wrap }
 
-    /* Small utility */
     .shop-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px}
     .shop-tools .btn{padding:8px 12px;border-radius:10px;border:1px solid #d8e1ee;background:#f8fafc;cursor:pointer}
     .notice{border:1px dashed #eab308;background:#fffbea;color:#854d0e;padding:10px;border-radius:10px}
@@ -113,12 +99,10 @@
         </div>
       </a>
 
-      <!-- Mobile menu button -->
       <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="siteNav">
         <span></span><span></span><span></span>
       </button>
 
-      <!-- Main nav -->
       <nav class="nav" id="siteNav">
         <a href="index.html">Home</a>
         <a href="shop.html" aria-current="page">Shop</a>
@@ -134,11 +118,9 @@
     <section class="card">
       <div class="shop-header">
         <h1>LWG Shop</h1>
-
         <div class="filters" role="search">
           <label class="visually-hidden" for="searchInput">Search products</label>
           <input id="searchInput" type="search" placeholder="Search products…" aria-label="Search products"/>
-
           <label class="visually-hidden" for="categoryFilter">Filter by category</label>
           <select id="categoryFilter" aria-label="Filter by category">
             <option value="">All Categories</option>
@@ -146,19 +128,21 @@
         </div>
       </div>
 
-      <!-- ===== ADMIN (hidden for customers) ===== -->
+      <!-- ===== ADMIN ===== -->
       <div class="admin-only">
         <div class="shop-tools">
           <button id="btnExport" class="btn">Export products (JSON)</button>
           <button id="btnImport" class="btn">Import products (JSON)</button>
-          <button id="btnClear" class="btn">Clear all products</button>
+          <button id="btnClear"  class="btn">Clear all products</button>
         </div>
 
-        <details class="add-panel" id="adminPanel">
-          <summary>➕ Add a Product</summary>
+        <details class="add-panel">
+          <summary id="panelSummary">➕ Add a Product</summary>
           <div style="margin-top:10px">
             <div class="form-grid">
-              <!-- ID is auto-managed; no field -->
+              <!-- hidden id used only while editing -->
+              <input id="pId" type="hidden"/>
+
               <label>Title
                 <input id="pTitle" placeholder="Product title"/>
               </label>
@@ -169,7 +153,6 @@
                 <input id="pCategory" placeholder="Men / Women / Kids / Electronics"/>
               </label>
 
-              <!-- Image: URL path or pick a file (we store as base64 data URL) -->
               <label>Image URL / Path
                 <input id="pImage" placeholder="images/products/polo1.jpg or https://…"/>
               </label>
@@ -186,14 +169,14 @@
               <label>Stock
                 <input id="pStock" type="number" min="0" step="1" placeholder="50"/>
               </label>
-              <div class="span-2" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center">
+              <div class="span-2" style="display:flex; gap:8px; flex-wrap:wrap">
                 <button id="btnAdd" class="btn" style="background:#002F5F;color:#fff;border-color:#002F5F">Add Product</button>
-                <button id="btnReset" class="btn" type="button">Reset</button>
-                <a id="btnCancelEdit" href="#" class="small muted" style="display:none">Cancel edit</a>
+                <button id="btnReset" class="btn">Reset</button>
               </div>
             </div>
             <p class="notice" style="margin-top:10px">
-              Admin tip: open <b>shop.html#admin</b> (or <b>?admin=1</b>) to show this panel on any device. Long-press the logo or tap it 5× as another shortcut.
+              Admin tip: open <b>shop.html#admin</b> (or <b>?admin=1</b>) to show this panel on any device.
+              Long-press the logo or tap it 5× as another shortcut.
             </p>
           </div>
         </details>
@@ -217,7 +200,7 @@
     </div>
   </footer>
 
-  <!-- Inline script: localStorage products + Admin Mode + aligned rendering + EDIT -->
+  <!-- Inline script: products store + Admin Mode + aligned rendering + proper EDIT -->
   <script>
     (function(){
       const KEY = 'lwg_products';
@@ -234,7 +217,7 @@
       const slug = s => String(s||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
       const genId = title => `${slug(title)}-${Math.random().toString(36).slice(2,7)}`;
 
-      // ----- Admin mode: URL (#admin or ?admin=1), Alt+Shift+A, long-press/tap logo
+      // ----- Admin mode
       function setAdmin(on){ document.body.setAttribute('data-admin', on ? 'true':'false'); localStorage.setItem(ADMIN_KEY,on?'1':'0'); }
       function wantAdmin(){ const h=(location.hash||'').toLowerCase(); const q=(location.search||'').toLowerCase(); return h.includes('admin')||q.includes('admin=1'); }
       setAdmin(localStorage.getItem(ADMIN_KEY)==='1' || wantAdmin());
@@ -265,51 +248,7 @@
         if (cats.includes(keep)) catSel.value = keep;
       }
 
-      // ----- EDIT state
-      let editingId = null;
-      const adminPanel = $('#adminPanel');
-      const btnAdd = $('#btnAdd');
-      const btnReset = $('#btnReset');
-      const btnCancelEdit = $('#btnCancelEdit');
-      const fileInputEl = $('#pImageFile');
-      const imgUrlEl    = $('#pImage');
-      const previewEl   = $('#pPreview');
-
-      function fillForm(p){
-        $('#pTitle').value = p.title || '';
-        $('#pPrice').value = (p.price ?? '');
-        $('#pCategory').value = p.category || '';
-        $('#pImage').value = p.image || '';
-        $('#pDesc').value = p.description || '';
-        $('#pStock').value = (p.stock ?? '');
-        if (previewEl) previewEl.src = p.image || '';
-      }
-
-      function clearForm(){
-        ['pTitle','pPrice','pCategory','pImage','pDesc','pStock'].forEach(id=>{ const el=$('#'+id); if(el) el.value=''; });
-        if (fileInputEl) fileInputEl.value='';
-        if (previewEl) previewEl.removeAttribute('src');
-      }
-
-      function enterEdit(p){
-        editingId = p.id;
-        fillForm(p);
-        btnAdd.textContent = 'Save Changes';
-        btnCancelEdit.style.display = 'inline';
-        if (adminPanel) adminPanel.open = true; // open the <details>
-        // update summary text to hint editing
-        adminPanel?.querySelector('summary')?.replaceChildren(document.createTextNode('✏️ Edit Product'));
-      }
-
-      function exitEdit(){
-        editingId = null;
-        clearForm();
-        btnAdd.textContent = 'Add Product';
-        btnCancelEdit.style.display = 'none';
-        adminPanel?.querySelector('summary')?.replaceChildren(document.createTextNode('➕ Add a Product'));
-      }
-
-      // ----- Render aligned cards (+admin Edit/Delete)
+      // ----- Render aligned cards
       function render(){
         const items = readProducts();
         const term = (search?.value||'').toLowerCase();
@@ -343,8 +282,11 @@
                 <input class="qty-input" type="number" value="1" min="1" max="${num(p.stock||0)||9999}"/>
                 <button class="btn icon" data-action="plus" aria-label="increase">+</button>
                 <button class="btn primary" data-action="add">Add to Cart</button>
-                ${admin ? '<button class="btn" data-action="edit" title="Edit product">Edit</button>' : ''}
-                ${admin ? '<button class="btn danger" data-action="del" title="Remove product">Delete</button>' : ''}
+                ${admin ? `
+                  <div class="row-admin">
+                    <button class="btn" data-action="edit">Edit</button>
+                    <button class="btn danger" data-action="del" title="Remove product">Delete</button>
+                  </div>` : ''}
               </div>
             </div>
           </article>
@@ -364,42 +306,48 @@
       search?.addEventListener('input', render);
       catSel?.addEventListener('change', render);
 
-      // ----- Grid actions (qty, add, edit, delete)
-      grid.addEventListener('click', (e)=>{
-        const btn = e.target.closest('button'); if(!btn) return;
-        const card = btn.closest('article.product-card'); if(!card) return;
-        const id = card.dataset.id;
-        const items = readProducts();
-        const product = items.find(p=>String(p.id)===String(id));
-        const qtyInput = card.querySelector('.qty-input');
+      // ----- ADMIN wires (form + Edit mode)
+      const addPanel    = document.querySelector('details.add-panel');
+      const panelTitle  = document.getElementById('panelSummary');
+      const pIdEl       = document.getElementById('pId');
+      const btnAdd      = document.getElementById('btnAdd');
+      const btnReset    = document.getElementById('btnReset');
+      const btnExport   = document.getElementById('btnExport');
+      const btnImport   = document.getElementById('btnImport');
+      const btnClear    = document.getElementById('btnClear');
+      const fileInputEl = document.getElementById('pImageFile');
+      const imgUrlEl    = document.getElementById('pImage');
+      const previewEl   = document.getElementById('pPreview');
 
-        if (btn.dataset.action === 'minus') qtyInput.value = Math.max(1, num(qtyInput.value)-1);
-        if (btn.dataset.action === 'plus')  qtyInput.value = Math.min(num(product?.stock||9999), num(qtyInput.value)+1);
+      function fillForm(p){
+        document.getElementById('pTitle').value    = p.title || '';
+        document.getElementById('pPrice').value    = p.price || '';
+        document.getElementById('pCategory').value = p.category || '';
+        document.getElementById('pImage').value    = p.image || '';
+        document.getElementById('pDesc').value     = p.description || '';
+        document.getElementById('pStock').value    = p.stock || '';
+        if (previewEl) previewEl.src = p.image || '';
+      }
+      function clearForm(){
+        ['pTitle','pPrice','pCategory','pImage','pDesc','pStock'].forEach(id=>{ const el=$('#'+id); if(el) el.value=''; });
+        if (fileInputEl) fileInputEl.value='';
+        if (previewEl) previewEl.removeAttribute('src');
+      }
+      function enterEditMode(product){
+        pIdEl.value = product.id;                      // keep the same id!
+        fillForm(product);
+        if (addPanel) addPanel.open = true;
+        if (panelTitle) panelTitle.textContent = '✏️ Edit Product';
+        if (btnAdd) btnAdd.textContent = 'Save Changes';
+      }
+      function exitEditMode(){
+        pIdEl.value = '';
+        clearForm();
+        if (panelTitle) panelTitle.textContent = '➕ Add a Product';
+        if (btnAdd) btnAdd.textContent = 'Add Product';
+      }
 
-        if (btn.dataset.action === 'add'){
-          const qty = Math.max(1, Math.min(num(product?.stock||9999), num(qtyInput.value)));
-          const cart = readCart();
-          const existing = cart.find(it=>String(it.id)===String(product.id));
-          if (existing) existing.qty = num(existing.qty) + qty;
-          else cart.push({ id: product.id, title: product.title, price: num(product.price), image: product.image, qty });
-          writeCart(cart);
-          btn.textContent = 'Added ✓'; setTimeout(()=> btn.textContent='Add to Cart', 900);
-        }
-
-        if (btn.dataset.action === 'edit'){
-          enterEdit(product);
-          window.scrollTo({ top: document.getElementById('adminPanel').offsetTop - 20, behavior: 'smooth' });
-        }
-
-        if (btn.dataset.action === 'del'){
-          writeProducts(items.filter(p=>String(p.id)!==String(id)));
-          // If we were editing this item, cancel edit
-          if (editingId === id) exitEdit();
-        }
-      });
-
-      // ----- ADMIN: add/save/reset/export/import/clear/cancel-edit
-      // Image file -> base64 preview
+      // image file -> base64 preview
       fileInputEl?.addEventListener('change', ()=>{
         const f = fileInputEl.files?.[0]; if(!f) return;
         const r = new FileReader();
@@ -408,8 +356,8 @@
       });
       imgUrlEl?.addEventListener('input', ()=>{ if(previewEl) previewEl.src = imgUrlEl.value; });
 
-      btnAdd?.addEventListener('click', (ev)=>{
-        ev.preventDefault();
+      btnAdd?.addEventListener('click', ()=>{
+        const editingId = pIdEl.value.trim();
         const p = {
           title: ($('#pTitle').value||'').trim(),
           price: num($('#pPrice').value),
@@ -422,18 +370,15 @@
 
         const items = readProducts();
 
-        if (editingId){
-          // update existing
-          const idx = items.findIndex(x=>String(x.id)===String(editingId));
-          if (idx>-1){
-            items[idx] = { ...items[idx], ...p }; // keep same id
-            writeProducts(items);
-            exitEdit();
-          } else {
-            alert('Item not found.'); exitEdit();
-          }
+        if (editingId) {
+          // UPDATE existing by id
+          const idx = items.findIndex(x => String(x.id) === String(editingId));
+          if (idx > -1) items[idx] = { ...items[idx], ...p, id: editingId };
+          else items.push({ id: editingId, ...p }); // fallback
+          writeProducts(items);
+          exitEditMode();
         } else {
-          // add new
+          // ADD new
           const id = genId(p.title);
           items.push({ id, ...p });
           writeProducts(items);
@@ -441,40 +386,67 @@
         }
       });
 
-      btnReset?.addEventListener('click', (e)=>{ e.preventDefault(); clearForm(); });
-      btnCancelEdit?.addEventListener('click', (e)=>{ e.preventDefault(); exitEdit(); });
+      btnReset?.addEventListener('click', ()=>{ exitEditMode(); });
 
-      $('#btnExport')?.addEventListener('click', ()=>{
+      btnExport?.addEventListener('click', ()=>{
         const blob = new Blob([JSON.stringify(readProducts(), null, 2)], {type:'application/json'});
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'products.json'; a.click(); URL.revokeObjectURL(a.href);
       });
 
-      $('#btnImport')?.addEventListener('click', ()=>{
+      btnImport?.addEventListener('click', ()=>{
         const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'application/json,.json';
         inp.addEventListener('change', async ()=>{
           const f = inp.files?.[0]; if(!f) return;
           try {
             const text = await f.text(); const arr = JSON.parse(text);
             if (!Array.isArray(arr)) throw new Error('JSON must be an array');
-            // Ensure any missing ids are generated
             const fixed = arr.map(x => ({...x, id: x.id || genId(x.title||'product')}));
             writeProducts(fixed);
-            exitEdit();
           } catch { alert('Invalid JSON file.'); }
         });
         inp.click();
       });
 
-      $('#btnClear')?.addEventListener('click', ()=>{ if (confirm('Clear ALL products?')) { writeProducts([]); exitEdit(); } });
+      btnClear?.addEventListener('click', ()=>{ if (confirm('Clear ALL products?')) writeProducts([]); });
+
+      // ----- Grid actions (qty, add, edit, delete)
+      grid.addEventListener('click', (e)=>{
+        const btn = e.target.closest('button'); if(!btn) return;
+        const card = btn.closest('.product-card'); if(!card) return;
+        const id = card.dataset.id;
+        const items = readProducts();
+        const product = items.find(p=>String(p.id)===String(id));
+        const qtyInput = card.querySelector('.qty-input');
+
+        if (btn.dataset.action === 'minus') qtyInput.value = Math.max(1, num(qtyInput.value)-1);
+        if (btn.dataset.action === 'plus')  qtyInput.value = Math.min(num(product?.stock||9999), num(qtyInput.value)+1);
+
+        if (btn.dataset.action === 'add'){
+          const qty = Math.max(1, Math.min(num(product?.stock||9999), num(qtyInput.value)));
+          const cart = (function(){ try { return JSON.parse(localStorage.getItem(CART_KEY))||[]; } catch { return []; } })();
+          const existing = cart.find(it=>String(it.id)===String(product.id));
+          if (existing) existing.qty = num(existing.qty) + qty;
+          else cart.push({ id: product.id, title: product.title, price: num(product.price), image: product.image, qty });
+          localStorage.setItem(CART_KEY, JSON.stringify(cart||[]));
+          updateBadge();
+          btn.textContent = 'Added ✓'; setTimeout(()=> btn.textContent='Add to Cart', 900);
+        }
+
+        if (btn.dataset.action === 'edit'){
+          // open panel with existing values, keep id to UPDATE (no duplicates)
+          enterEditMode(product);
+        }
+
+        if (btn.dataset.action === 'del'){
+          writeProducts(items.filter(p=>String(p.id)!==String(id)));
+          if (String(pIdEl.value) === String(id)) exitEditMode(); // if we were editing this one
+        }
+      });
 
       // Boot
       buildCats(readProducts());
       render();
-      (function updateBadgeInit(){
-        const bd = $('#cartBadge'); if(!bd) return;
-        const count = (JSON.parse(localStorage.getItem(CART_KEY)||'[]')||[]).reduce((a,it)=>a + (num(it.qty)||0), 0);
-        bd.textContent = String(count);
-      })();
+      updateBadge();
     })();
   </script>
 </body>
