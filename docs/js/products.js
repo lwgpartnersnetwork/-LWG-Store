@@ -3,6 +3,7 @@
    - Products in localStorage (seeded on first run)
    - Shop render + Cart render
    - WhatsApp checkout with full, readable receipt
+   - Adds "Send me a copy" for customer receipt
    ========================================================= */
 
 /* ========= PAYMENT META ========= */
@@ -235,9 +236,9 @@ function updatePaymentInfo() {
   }
   const meta = PAYMENT_METHODS[key];
 
-  // IMPORTANT: show newlines nicely + keep it safe
+  // preserve newlines for readability
   box.style.display = 'block';
-  box.style.whiteSpace = 'pre-wrap';     // preserve \n
+  box.style.whiteSpace = 'pre-wrap';
   box.innerText = `${meta.label}\n${meta.info}`;
 }
 
@@ -372,12 +373,13 @@ function renderCart() {
     b.addEventListener('click', () => removeItem(b.getAttribute('data-remove')));
   });
 
-  // Checkout via WhatsApp (no server save)
+  // Checkout via WhatsApp (no server save) + "Send me a copy"
   const checkoutBtn = document.getElementById('checkoutBtn');
   if (checkoutBtn) {
     checkoutBtn.textContent = 'Checkout via WhatsApp';
     checkoutBtn.onclick = async () => {
-      if (!cart.length) return alert('Your cart is empty.');
+      const liveCart = api.readCart(); // re-read to be safe
+      if (!liveCart.length) return alert('Your cart is empty.');
 
       const name = (document.getElementById('custName')?.value || '').trim();
       const address = (document.getElementById('custAddress')?.value || '').trim();
@@ -385,40 +387,66 @@ function renderCart() {
       const locationLabel = getDeliveryLocationLabel() || 'Not selected';
       const payment = getPaymentMeta();
 
-      const now = new Date();
-      const pad = (n) => String(n).padStart(2, '0');
-      const orderId = `LWG-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+      if (!name || !phone || !address || !locationLabel || !payment.label) {
+        alert('Please fill all delivery and payment fields.');
+        return;
+      }
 
-      const lines = cart.map((i, idx) => {
+      // Recalculate totals at click-time
+      let sub = 0;
+      const lines = liveCart.map((i, idx) => {
         const price = Number(i.price) || 0;
         const qty = Number(i.qty) || 0;
         const lineTotal = price * qty;
+        sub += lineTotal;
         return `${idx + 1}. ${i.title}  |  Qty: ${qty}  |  @ NLe ${price.toFixed(2)}  |  Line: NLe ${lineTotal.toFixed(2)}`;
       });
+      const feeNow = getDeliveryFee();
+      const grandNow = sub + feeNow;
+
+      const now = new Date();
+      const pad = (n) => String(n).padStart(2, '0');
+      const orderId = `LWG-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
 
       const message =
 `NEW ORDER — ${orderId}
 Items:
 ${lines.join('\n')}
 
-Subtotal: NLe ${subtotal.toFixed(2)}
-Delivery (${locationLabel}): NLe ${fee.toFixed(2)}
-Grand Total: NLe ${(subtotal + fee).toFixed(2)}
+Subtotal: NLe ${sub.toFixed(2)}
+Delivery (${locationLabel}): NLe ${feeNow.toFixed(2)}
+Grand Total: NLe ${grandNow.toFixed(2)}
 
-Customer: ${name || '—'} | ${phone || '—'}
-Address: ${address || '—'}
+Customer: ${name} | ${phone}
+Address: ${address}
 
-Payment: ${payment.label || '—'}
+Payment: ${payment.label}
 ${payment.info ? 'Payment Details:\n' + payment.info + '\n' : ''}Source: ${location.href}`;
 
+      // 1) Open business chat (you receive the order)
       window.open(
         `https://wa.me/23272146015?text=${encodeURIComponent(message)}`,
         '_blank',
         'noopener'
       );
 
-      // Empty cart after sending
-      window.__lwg.writeCart([]);
+      // 2) Offer "Send me a copy" to the customer
+      const cta = document.querySelector('.cta');
+      const digits = phone.replace(/\D/g,'');
+      if (cta && !document.getElementById('copyToSelf') && digits.length >= 8) {
+        const copyA = document.createElement('a');
+        copyA.id = 'copyToSelf';
+        copyA.className = 'btn ghost';
+        copyA.target = '_blank';
+        copyA.rel = 'noopener';
+        copyA.href = `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
+        copyA.textContent = 'Send me a copy';
+        copyA.style.marginLeft = '8px';
+        cta.appendChild(copyA);
+      }
+
+      // Empty cart after sending & refresh
+      api.writeCart([]);
       setTimeout(() => location.reload(), 1200);
     };
   }

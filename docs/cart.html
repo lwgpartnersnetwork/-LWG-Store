@@ -122,6 +122,7 @@
       <div class="cta">
         <a href="shop.html" class="btn ghost">Continue Shopping</a>
         <button id="checkoutBtn" class="btn primary">Checkout via WhatsApp</button>
+        <!-- We'll add the "Send me a copy" button here dynamically -->
       </div>
     </section>
   </main>
@@ -264,19 +265,20 @@
       // Delivery fee & payment info
       locationSel.addEventListener('change', render);
 
+      // Show real payment info (updated bank details)
       paySel.addEventListener('change', () => {
         const m = paySel.value;
         const map = {
-          orange: 'Pay with <b>Orange Money</b>: Name: LWG Partners Network · Number: <code>+232 721 46015</code>.',
-          africell: 'Pay with <b>Africell Money</b>: Name: LWG Partners Network · Number: <code>+232 721 46015</code>.',
-          bank: 'Bank Transfer: Bank: <b>To be provided</b>. Use your phone number as reference.',
-          cod: 'Cash on Delivery: Pay on arrival.'
+          orange: 'Pay with <b>Orange Money</b>: Name: <b>LWG Partners Network</b> · Number: <code>+232 721 46015</code>.',
+          africell: 'Pay with <b>Africell Money</b>: Name: <b>LWG Partners Network</b> · Number: <code>+232 30 774 701</code>.',
+          bank: 'Bank Transfer:<br>Bank: <b>UBA</b><br>Account Name: <b>LWG Partners Network</b><br>Account No: <b>5409-1003-0001-447</b><br>Branch: <b>Freetown</b><br><i>Use your phone number as reference.</i>',
+          cod: 'Cash on Delivery: Pay the rider on arrival.'
         };
         if (map[m]) { payInfo.style.display='block'; payInfo.innerHTML = map[m]; }
         else { payInfo.style.display='none'; payInfo.textContent=''; }
       });
 
-      // Checkout (WhatsApp) — FULLY ENCODED + CLEAR CART AFTER
+      // Checkout (WhatsApp) — opens business chat, shows "Send me a copy", then clears cart
       checkoutBtn.addEventListener('click', () => {
         const name = document.getElementById('custName').value.trim();
         const phone = document.getElementById('custPhone').value.trim();
@@ -292,12 +294,11 @@
 
         const sub   = rows.reduce((a, r) => a + num(r.line), 0);
         const total = sub + fee;
-        const lines = rows.map(x => `• ${x.title} × ${x.qty} — NLe ${money(x.line)}`).join('\n');
+        const lines = rows.map((x,i) => `• ${x.title} × ${x.qty} — NLe ${money(x.line)}`).join('\n');
 
         const msg = [
-          'Hello LWG,',
-          '',
-          "I'd like to place an order:",
+          'NEW ORDER',
+          'Items:',
           lines,
           '',
           `Subtotal: NLe ${money(sub)}`,
@@ -307,19 +308,42 @@
           `Name: ${name}`,
           `Phone: ${phone}`,
           `Address: ${addr}`,
-          `Payment: ${pay.toUpperCase()}`
+          `Payment: ${pay.toUpperCase()}`,
+          '',
+          `Source: ${location.href}`
         ].join('\n');
 
-        const url = `https://wa.me/23272146015?text=${encodeURIComponent(msg)}`;
-        window.open(url, '_blank');
+        // 1) Open business chat (you receive the order)
+        const businessUrl = `https://wa.me/23272146015?text=${encodeURIComponent(msg)}`;
+        window.open(businessUrl, '_blank', 'noopener');
 
-        // Clear cart AFTER we open WhatsApp
+        // 2) Add "Send me a copy" button for the customer
+        const cta = document.querySelector('.cta');
+        if (cta && !document.getElementById('copyToSelf')) {
+          const digits = phone.replace(/\D/g,'');
+          if (digits.length >= 8) {
+            const copyA = document.createElement('a');
+            copyA.id = 'copyToSelf';
+            copyA.className = 'btn ghost';
+            copyA.target = '_blank';
+            copyA.rel = 'noopener';
+            copyA.href = `https://wa.me/${digits}?text=${encodeURIComponent(msg)}`;
+            copyA.textContent = 'Send me a copy';
+            copyA.style.marginLeft = '8px';
+            cta.appendChild(copyA);
+          }
+        }
+
+        // 3) Clear the cart and refresh
         writeCart([]);
         render();
+        setTimeout(() => location.reload(), 1200);
       });
 
-      // Initial draw
+      // Initial draw + initialize payment box state
       render();
+      // trigger payment info refresh if a value is preselected
+      paySel.dispatchEvent(new Event('change'));
     })();
   </script>
 </body>
